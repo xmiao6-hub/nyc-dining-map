@@ -31,19 +31,6 @@ header {
   position: relative;
 }
 
-:fullscreen body {
-  padding: 0;
-}
-
-:fullscreen .panel {
-  width: 100vw;
-  max-width: none;
-  padding: 0 14px;
-}
-
-:fullscreen #canvas-wrap {
-  width: 100vw;
-}
 
 header h1,
 header .subtitle {
@@ -212,6 +199,7 @@ header h1 {
 
 #canvas-wrap canvas {
   display: block;
+  margin: 0 auto;
   border-radius: 14px;
   border: 1px solid #ffffff;
   box-shadow: 0 16px 44px rgba(80, 150, 230, 0.3);
