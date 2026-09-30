@@ -486,6 +486,8 @@ function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
   off.pop();
   off.loadPixels();
   g.noStroke();
+  const bx = Math.round(x - half * pix);
+  const by = Math.round(y - half * pix);
   g.drawingContext.globalAlpha = alpha;
   for (let j = 0; j < half * 2; j++) {
     for (let i = 0; i < half * 2; i++) {
@@ -502,7 +504,7 @@ function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
         b = Math.min(255, Math.round(b * f));
       }
       g.fill(r, gr, b);
-      g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix, pix);
+      g.rect(bx + i * pix, by + j * pix, pix, pix);
     }
   }
   g.drawingContext.globalAlpha = 1;
