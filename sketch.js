@@ -524,7 +524,7 @@ function buildHeaderSpots() {
     cv.style('position', 'absolute');
     cv.style('left', Math.round(d.fx * 100) + '%');
     cv.style('top', '50%');
-    cv.style('transform', d.bt);
+    cv.elt.style.setProperty('--tf', d.bt);
     cv.style('display', 'block');
     headerSpots.push({ cv, bt: d.bt, kind: d.kind });
   }
@@ -549,7 +549,7 @@ function buildEdgeSpots() {
     cv.style('left', d.left);
     cv.style('top', d.top);
     if (d.right) cv.style('right', d.right);
-    cv.style('transform', d.bt);
+    cv.elt.style.setProperty('--tf', d.bt);
     cv.parent(document.body);
     edgeSpots.push({ cv, bt: d.bt, kind: d.kind });
   }
@@ -579,13 +579,8 @@ function updateSpriteFX() {
     const r = sp.cv.elt.getBoundingClientRect();
     const hovered = pageMX >= r.left && pageMX <= r.right && pageMY >= r.top && pageMY <= r.bottom;
     sp.energy = sp.energy || 0;
-    if (hovered) sp.energy = 1;
-    else sp.energy *= 0.9;
-    if (sp.energy > 0.02) {
-      const jx = (Math.random() - 0.5) * 14 * sp.energy;
-      const jy = (Math.random() - 0.5) * 14 * sp.energy;
-      const jr = (Math.random() - 0.5) * 8 * sp.energy;
-      sp.cv.style.transform = sp.bt + ' translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px) rotate(' + jr.toFixed(1) + 'deg) scale(' + (1 + 0.06 * sp.energy).toFixed(3) + ')';
+    if (hovered) {
+      sp.energy = 1;
       if (Math.random() < 0.3) {
         scents.push({
           x: r.left + Math.random() * r.width,
@@ -600,7 +595,16 @@ function updateSpriteFX() {
         });
       }
     } else {
-      sp.cv.style.transform = sp.bt;
+      sp.energy *= 0.9;
+      if (sp.energy > 0.02) {
+        const jx = (Math.random() - 0.5) * 10 * sp.energy;
+        const jy = (Math.random() - 0.5) * 10 * sp.energy;
+        const jr = (Math.random() - 0.5) * 6 * sp.energy;
+        sp.cv.style.transform = 'var(--tf) translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px) rotate(' + jr.toFixed(1) + 'deg)';
+      } else if (sp.energy !== 0 && sp.energy <= 0.02) {
+        sp.cv.style.transform = 'var(--tf)';
+        sp.energy = 0;
+      }
     }
   }
   if (!scentOverlay) return;

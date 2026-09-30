@@ -50,7 +50,24 @@ footer {
   position: absolute;
   z-index: 0;
   pointer-events: none;
-  transform: translate(-50%, -50%);
+  transform: var(--tf);
+}
+
+body > canvas {
+  transform: var(--tf);
+}
+
+@keyframes spriteWobble {
+  0% { transform: var(--tf) translate(0px, 0px) rotate(0deg); }
+  25% { transform: var(--tf) translate(4px, -3px) rotate(2.5deg); }
+  50% { transform: var(--tf) translate(-4px, 3px) rotate(-2.5deg); }
+  75% { transform: var(--tf) translate(3px, 3px) rotate(2deg); }
+  100% { transform: var(--tf) translate(0px, 0px) rotate(0deg); }
+}
+
+#page-header canvas:hover,
+body > canvas:hover {
+  animation: spriteWobble 0.3s infinite;
 }
 
 header h1 {
