@@ -576,7 +576,7 @@ function buildScentOverlay() {
 function updateSpriteFX() {
   const t = millis() / 1000;
   for (const sp of spotSprites) {
-    const r = sp.cv.getBoundingClientRect();
+    const r = sp.cv.elt.getBoundingClientRect();
     const hovered = pageMX >= r.left && pageMX <= r.right && pageMY >= r.top && pageMY <= r.bottom;
     if (hovered) {
       const jx = (Math.random() - 0.5) * 5;
