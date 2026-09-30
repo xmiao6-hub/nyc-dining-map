@@ -1054,6 +1054,18 @@ function drawShedRoadway(t, u) {
   roof.setAlpha(185);
   fill(roof);
   quad(-2.75 * u, -2.45 * u, 2.75 * u, -2.45 * u, 2.95 * u, -2.05 * u, -2.95 * u, -2.05 * u);
+  const stripeR = color('#ff8a5c');
+  stripeR.setAlpha(165);
+  const stripeC = color('#fffef8');
+  stripeC.setAlpha(210);
+  for (let i = 0; i < 6; i++) {
+    const a0 = -2.75 + (4.5 * i) / 6;
+    const a1 = -2.75 + (4.5 * (i + 1)) / 6;
+    const b0 = -2.95 + (4.5 * i) / 6;
+    const b1 = -2.95 + (4.5 * (i + 1)) / 6;
+    fill(i % 2 === 0 ? stripeR : stripeC);
+    quad(a0 * u, -2.45 * u, a1 * u, -2.45 * u, b1 * u, -2.05 * u, b0 * u, -2.05 * u);
+  }
   const roofTrim = color('#d9d0f2');
   roofTrim.setAlpha(155);
   noFill();
@@ -1061,6 +1073,25 @@ function drawShedRoadway(t, u) {
   strokeWeight(0.04 * u);
   quad(-2.75 * u, -2.45 * u, 2.75 * u, -2.45 * u, 2.95 * u, -2.05 * u, -2.95 * u, -2.05 * u);
   noStroke();
+
+  const sgLine = color('#d9a3b3');
+  sgLine.setAlpha(150);
+  noFill();
+  stroke(sgLine);
+  strokeWeight(0.05 * u);
+  line(1.7 * u, -2.05 * u, 1.7 * u, -1.62 * u);
+  circle(1.7 * u, -1.3 * u, 0.72 * u);
+  noStroke();
+  const sgFill = color('#e84393');
+  sgFill.setAlpha(210);
+  fill(sgFill);
+  for (const ang of [-QUARTER_PI, QUARTER_PI]) {
+    push();
+    translate(1.7 * u, -1.3 * u);
+    rotate(ang);
+    rect(-0.032 * u, -0.27 * u, 0.064 * u, 0.54 * u, 0.03 * u);
+    pop();
+  }
 
   const wire = color('#d9d0f2');
   wire.setAlpha(110);
