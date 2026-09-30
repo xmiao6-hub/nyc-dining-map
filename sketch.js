@@ -865,13 +865,16 @@ function drawCafeSidewalk(t, u) {
 
   const glass = color('#ffc93c');
   glass.setAlpha(Math.min(255, Math.round(165 + Math.sin(t * 0.8) * 25)));
-  fill(glass);
-  rect(-1.9 * u, -2.15 * u, 2.9 * u, 1.35 * u, 0.08 * u);
-  const mull = color('#5c6f92');
-  mull.setAlpha(230);
-  fill(mull);
-  rect(-0.95 * u, -2.15 * u, 0.06 * u, 1.35 * u, 0.03 * u);
-  rect(-0.05 * u, -2.15 * u, 0.06 * u, 1.35 * u, 0.03 * u);
+  for (const pane of [-1.9, -0.92, 0.06]) {
+    fill(glass);
+    rect(pane * u, -2.15 * u, 0.86 * u, 1.35 * u, 0.06 * u);
+  }
+  noStroke();
+  const shine = color('#ffffff');
+  shine.setAlpha(85);
+  fill(shine);
+  quad(-1.78 * u, -0.92 * u, -1.64 * u, -0.92 * u, -1.28 * u, -2.03 * u, -1.42 * u, -2.03 * u);
+  quad(-1.52 * u, -0.92 * u, -1.46 * u, -0.92 * u, -1.1 * u, -2.03 * u, -1.16 * u, -2.03 * u);
 
   const canopy = color('#9bd4f5');
   canopy.setAlpha(195);
@@ -1099,7 +1102,7 @@ function drawBistro(t, u) {
 
   const awnRed = color('#ff5d6c');
   awnRed.setAlpha(195);
-  const awnCream = color('#ffffff');
+  const awnCream = color('#ead9b8');
   awnCream.setAlpha(215);
   const stripeW = 0.72 * u;
   const startX = -2.16 * u;
@@ -1133,7 +1136,7 @@ function drawBistro(t, u) {
     wcol.setAlpha(Math.min(255, Math.round(185 + Math.sin(t * 0.8 + wx) * 30)));
     fill(wcol);
     rect(wx * u, -1.55 * u, 1.1 * u, 0.95 * u, 0.09 * u);
-    const mull = color('#5c6f92');
+    const mull = color('#ead9b8');
     mull.setAlpha(230);
     fill(mull);
     rect((wx + 0.52) * u, -1.55 * u, 0.06 * u, 0.95 * u, 0.03 * u);
