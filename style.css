@@ -47,7 +47,7 @@ footer {
 }
 
 .spot-wrap {
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 #page-header .spot-wrap {
