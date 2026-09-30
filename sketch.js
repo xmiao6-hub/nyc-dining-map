@@ -470,17 +470,8 @@ function decorateBgLayer() {
   const g = bgLayer;
   const u = Math.min(width, height) / 10;
   drawSpotPixel(g, spotCoffee, width * 0.89, height * 0.16, u * 0.9, 0.7, 5);
-  drawSpotSmooth(g, spotWine, width * 0.1, height * 0.52, u * 0.95, 0.7);
+  drawSpotPixel(g, spotWine, width * 0.1, height * 0.52, u * 0.95, 0.7, 5);
   drawSpotPixel(g, spotCupcake, width * 0.09, height * 0.13, u * 1.2, 0.7, 5);
-}
-
-function drawSpotSmooth(g, fn, x, y, s, alpha) {
-  g.drawingContext.globalAlpha = alpha;
-  g.push();
-  g.translate(x, y);
-  fn(g, s);
-  g.pop();
-  g.drawingContext.globalAlpha = 1;
 }
 
 function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
@@ -504,14 +495,6 @@ function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
       const gr = Math.min(255, Math.round(off.pixels[k + 1] / 32) * 32);
       const b = Math.min(255, Math.round(off.pixels[k + 2] / 32) * 32);
       g.fill(r, gr, b);
-      g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix, pix);
-    }
-  }
-  g.drawingContext.globalAlpha = alpha * 0.22;
-  g.fill(255);
-  for (let j = 0; j < half * 2; j++) {
-    for (let i = 0; i < half * 2; i++) {
-      if ((i + j) % 2 === 0) continue;
       g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix, pix);
     }
   }
@@ -601,25 +584,37 @@ function spotCupcake(g, s) {
   c.setAlpha(70);
   g.fill(c);
   g.ellipse(0, s * 0.62, s * 0.75, s * 0.1);
-  c = g.color('#ff9e4f');
-  c.setAlpha(200);
+  c = g.color('#ff8a5c');
+  c.setAlpha(210);
   g.fill(c);
-  g.quad(-s * 0.4, -s * 0.15, s * 0.4, -s * 0.15, s * 0.28, s * 0.55, -s * 0.28, s * 0.55);
-  c = g.color('#c96a2a');
-  c.setAlpha(150);
+  g.quad(-s * 0.42, -s * 0.12, s * 0.42, -s * 0.12, s * 0.26, s * 0.55, -s * 0.26, s * 0.55);
+  c = g.color('#e06a3a');
+  c.setAlpha(190);
   g.fill(c);
-  g.rect(-s * 0.14, -s * 0.13, s * 0.07, s * 0.66, s * 0.02);
-  g.rect(s * 0.07, -s * 0.13, s * 0.07, s * 0.66, s * 0.02);
+  g.quad(-s * 0.28, -s * 0.12, -s * 0.13, -s * 0.12, -s * 0.09, s * 0.55, -s * 0.23, s * 0.55);
+  g.quad(s * 0.13, -s * 0.12, s * 0.28, -s * 0.12, s * 0.23, s * 0.55, s * 0.09, s * 0.55);
   c = g.color('#ffb3c8');
-  c.setAlpha(200);
+  c.setAlpha(215);
   g.fill(c);
-  g.circle(-s * 0.18, -s * 0.3, s * 0.4);
-  g.circle(s * 0.18, -s * 0.3, s * 0.4);
-  g.circle(0, -s * 0.5, s * 0.44);
+  g.circle(-s * 0.24, -s * 0.24, s * 0.42);
+  g.circle(s * 0.24, -s * 0.24, s * 0.42);
+  c = g.color('#ffd1de');
+  c.setAlpha(215);
+  g.fill(c);
+  g.circle(-s * 0.12, -s * 0.46, s * 0.38);
+  g.circle(s * 0.12, -s * 0.46, s * 0.38);
+  c = g.color('#ffb3c8');
+  c.setAlpha(215);
+  g.fill(c);
+  g.circle(0, -s * 0.66, s * 0.36);
   c = g.color('#ff5d6c');
-  c.setAlpha(220);
+  c.setAlpha(230);
   g.fill(c);
-  g.circle(0, -s * 0.72, s * 0.16);
+  g.circle(0, -s * 0.86, s * 0.16);
+  g.stroke(c);
+  g.strokeWeight(s * 0.05);
+  g.line(0, -s * 0.94, s * 0.08, -s * 1.04);
+  g.noStroke();
 }
 
 const PROP_TYPES = ['fork', 'knife', 'cup', 'glass', 'pizza', 'bottle', 'burger', 'fries', 'icecream'];
