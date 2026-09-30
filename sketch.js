@@ -529,8 +529,8 @@ function buildEdgeSpots() {
   edgeSpots = [];
   const defs = [
     { fn: glyphPizza, s: 70, style: { left: '6px', top: '28%', transform: 'translate(0, -50%) rotate(-10deg)' } },
-    { fn: spotSalad, s: 58, style: { left: '8px', top: '49%', transform: 'translate(0, -50%) rotate(4deg)' } },
-    { fn: glyphFries, s: 66, style: { left: '6px', top: '71%', transform: 'translate(0, -50%) rotate(-5deg)' } },
+    { fn: spotSalad, s: 58, style: { left: '26px', top: '49%', transform: 'translate(0, -50%) rotate(4deg)' } },
+    { fn: glyphFries, s: 66, style: { left: '2px', top: '71%', transform: 'translate(0, -50%) rotate(-5deg)' } },
     { fn: glyphBurger, s: 70, style: { right: '6px', top: '26%', transform: 'translate(0, -50%) rotate(8deg)' } },
     { fn: glyphIceCream, s: 68, style: { right: '6px', top: '68%', transform: 'translate(0, -50%) rotate(6deg)' } },
   ];
@@ -880,8 +880,8 @@ function drawCafeSidewalk(t, u) {
   rect(-2.3 * u, -2.7 * u, 4.6 * u, 2.48 * u, 0.1 * u);
   noStroke();
 
-  const glass = color('#ffc93c');
-  glass.setAlpha(Math.min(255, Math.round(165 + Math.sin(t * 0.8) * 25)));
+  const glass = color('#f0a832');
+  glass.setAlpha(Math.min(255, Math.round(230 + Math.sin(t * 0.8) * 25)));
   fill(glass);
   rect(-1.9 * u, -2.15 * u, 2.9 * u, 1.35 * u, 0.08 * u);
   noStroke();
@@ -906,7 +906,7 @@ function drawCafeSidewalk(t, u) {
   const poleC = color('#d9d0f2');
   const tableC = color('#ffffff');
   const chairC = color('#cabfe8');
-  for (const um of [[-1.45, 2.35, '#c9a8e8'], [0.4, 2.15, '#ffffff']]) {
+  for (const um of [[-1.45, 2.35, '#9a6fd6'], [0.4, 2.15, '#c9a05a']]) {
     const ux = um[0] * u;
     const poleTop = -um[1] * u;
     poleC.setAlpha(180);
