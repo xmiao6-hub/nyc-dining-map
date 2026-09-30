@@ -873,7 +873,7 @@ function drawCafeSidewalk(t, u) {
   rect(-0.95 * u, -2.15 * u, 0.06 * u, 1.35 * u, 0.03 * u);
   rect(-0.05 * u, -2.15 * u, 0.06 * u, 1.35 * u, 0.03 * u);
 
-  const canopy = color('#ff5d6c');
+  const canopy = color('#9bd4f5');
   canopy.setAlpha(195);
   fill(canopy);
   rect(-2.05 * u, -2.5 * u, 3.1 * u, 0.26 * u, 0.1 * u);
@@ -886,9 +886,9 @@ function drawCafeSidewalk(t, u) {
   circle(1.88 * u, -0.95 * u, 0.09 * u);
 
   const poleC = color('#d9d0f2');
-  const tableC = color('#fffef8');
+  const tableC = color('#ead9b8');
   const chairC = color('#cabfe8');
-  for (const um of [[-1.45, 2.35, '#ff8a5c'], [0.4, 2.15, '#f5ead9']]) {
+  for (const um of [[-1.45, 2.35, '#c9a8e8'], [0.4, 2.15, '#ead9b8']]) {
     const ux = um[0] * u;
     const poleTop = -um[1] * u;
     poleC.setAlpha(180);
