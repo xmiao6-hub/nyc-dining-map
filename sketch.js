@@ -44,7 +44,6 @@ function setup() {
       computeBounds();
       layoutMap();
       projectPoints();
-      buildBgLayer();
       for (const b of boroughList()) visibleBoroughs[b] = true;
       buildChips();
       wireFilters();
@@ -442,90 +441,45 @@ function buildBgLayer() {
     bgLayer.fill(bgLayer.lerpColor(edge, center, t));
     bgLayer.circle(cx, cy, d * 2);
   }
-  if (mapRect) drawMapBase();
   decorateBgLayer();
-}
-
-function drawMapBase() {
-  const g = bgLayer;
-  if (!mapRect || !Array.isArray(window.NYC_BOROUGHS)) return;
-  const mainland = [
-    [[-74.16, 40.44], [-74.16, 40.94], [-74.085, 40.94], [-74.07, 40.78], [-74.062, 40.7], [-74.078, 40.64], [-74.115, 40.52], [-74.16, 40.47]],
-    [[-74.16, 40.92], [-73.66, 40.92], [-73.66, 41.0], [-74.16, 41.0]],
-    [[-73.72, 40.92], [-73.5, 40.92], [-73.5, 40.59], [-73.7, 40.59], [-73.72, 40.7]],
-  ];
-  g.noStroke();
-  let c = g.color(31, 44, 68);
-  g.fill(c);
-  for (const poly of mainland) {
-    g.beginShape();
-    for (const pt of poly) {
-      const v = lonLatToXY(pt[0], pt[1]);
-      g.vertex(v.x, v.y);
-    }
-    g.endShape(g.CLOSE);
-  }
-  c = g.color(48, 66, 98);
-  g.fill(c);
-  for (const b of window.NYC_BOROUGHS) {
-    for (const ring of b.rings) {
-      g.beginShape();
-      for (const pt of ring) {
-        const v = lonLatToXY(pt[0], pt[1]);
-        g.vertex(v.x, v.y);
-      }
-      g.endShape(g.CLOSE);
-    }
-  }
-  c = g.color(130, 175, 225, 70);
-  g.stroke(c);
-  g.strokeWeight(1);
-  for (const b of window.NYC_BOROUGHS) {
-    for (const ring of b.rings) {
-      g.beginShape();
-      for (const pt of ring) {
-        const v = lonLatToXY(pt[0], pt[1]);
-        g.vertex(v.x, v.y);
-      }
-      g.endShape(g.CLOSE);
-    }
-  }
-  g.noStroke();
-  c = g.color(150, 195, 240, 90);
-  g.fill(c);
-  g.textSize(10);
-  g.textAlign(g.CENTER, g.CENTER);
-  g.textStyle(g.BOLD);
-  g.textFont('Helvetica');
-  const labels = [
-    ['HUDSON RIVER', -74.045, 40.8, -Math.PI / 2],
-    ['EAST RIVER', -73.938, 40.745, -Math.PI / 2],
-    ['ATLANTIC OCEAN', -73.8, 40.49, 0],
-    ['JAMAICA BAY', -73.85, 40.56, 0],
-    ['UPPER BAY', -73.99, 40.655, 0],
-  ];
-  for (const lb of labels) {
-    const v = lonLatToXY(lb[1], lb[2]);
-    g.push();
-    g.translate(v.x, v.y);
-    g.rotate(lb[3]);
-    g.text(lb[0], 0, 0);
-    g.pop();
-  }
 }
 
 function decorateBgLayer() {
   const g = bgLayer;
   const u = Math.min(width, height) / 10;
-  spotCoffee(g, width * 0.89, height * 0.16, u * 1.1);
-  spotWine(g, width * 0.1, height * 0.52, u * 1.3);
-  spotCupcake(g, width * 0.09, height * 0.13, u * 1.2);
+  drawSpotPixel(g, spotCoffee, width * 0.89, height * 0.16, u * 0.9, 0.7, 5);
+  drawSpotSmooth(g, spotWine, width * 0.1, height * 0.52, u * 0.95, 0.7);
+  drawSpotPixel(g, spotCupcake, width * 0.09, height * 0.13, u * 1.2, 0.7, 5);
+}
+
+function drawSpotSmooth(g, fn, x, y, s, alpha) {
+  g.drawingContext.globalAlpha = alpha;
+  g.push();
+  g.translate(x, y);
+  fn(g, s);
+  g.pop();
+  g.drawingContext.globalAlpha = 1;
+}
+
+function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
+  const half = Math.ceil((s * 1.25) / pix);
+  const off = createGraphics(half * 2, half * 2);
+  off.noStroke();
+  off.push();
+  off.translate(half, half);
+  off.scale(1 / pix);
+  fn(off, s);
+  off.pop();
+  g.noSmooth();
+  g.drawingContext.globalAlpha = alpha;
+  g.image(off, x - half * pix, y - half * pix, half * 2 * pix, half * 2 * pix);
+  g.drawingContext.globalAlpha = 1;
+  g.smooth();
+  off.remove();
 }
 
 
-function spotCoffee(g, x, y, s) {
-  g.push();
-  g.translate(x, y);
+function spotCoffee(g, s) {
   g.noStroke();
   let c = g.color('#f5ead9');
   c.setAlpha(150);
@@ -562,12 +516,9 @@ function spotCoffee(g, x, y, s) {
   g.line(s * 0.79, s * 0.5, s * 0.91, s * 0.5);
   g.line(s * 0.96, s * 0.62, s * 1.08, s * 0.62);
   g.noStroke();
-  g.pop();
 }
 
-function spotWine(g, x, y, s) {
-  g.push();
-  g.translate(x, y);
+function spotWine(g, s) {
   g.noStroke();
   let c = g.color('#0a0f1e');
   c.setAlpha(70);
@@ -601,12 +552,9 @@ function spotWine(g, x, y, s) {
   c.setAlpha(210);
   g.fill(c);
   g.arc(s * 0.33, -s * 0.32, s * 0.4, s * 0.6, 0.3, PI - 0.3, CHORD);
-  g.pop();
 }
 
-function spotCupcake(g, x, y, s) {
-  g.push();
-  g.translate(x, y);
+function spotCupcake(g, s) {
   g.noStroke();
   let c = g.color('#0a0f1e');
   c.setAlpha(70);
@@ -631,7 +579,6 @@ function spotCupcake(g, x, y, s) {
   c.setAlpha(220);
   g.fill(c);
   g.circle(0, -s * 0.72, s * 0.16);
-  g.pop();
 }
 
 const PROP_TYPES = ['fork', 'knife', 'cup', 'glass', 'pizza', 'bottle', 'burger', 'fries', 'icecream'];
