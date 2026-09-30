@@ -723,7 +723,7 @@ function drawProps() {
       push();
       translate(prop.cx, prop.cy);
       rotate(prop.rotNow);
-      drawGlyph(prop.type, prop.s);
+      drawGlyph(prop.type, window, prop.s);
       pop();
       drawingContext.globalAlpha = 1;
     } else if (prop.state === 'lit') {
@@ -741,7 +741,7 @@ function drawProps() {
       translate(prop.cx, prop.cy);
       rotate(prop.rotNow);
       scale(1 + p * 0.18);
-      drawGlyph(prop.type, prop.s);
+      drawGlyph(prop.type, window, prop.s);
       pop();
       drawingContext.globalAlpha = 1;
       if (p >= 1) {
@@ -762,7 +762,7 @@ function drawProps() {
       translate(prop.cx, prop.cy);
       rotate(prop.rotNow);
       scale(1.18 + p * 0.5);
-      drawGlyph(prop.type, prop.s);
+      drawGlyph(prop.type, window, prop.s);
       pop();
       drawingContext.globalAlpha = 1;
       push();
@@ -968,16 +968,16 @@ function drawShedRoadway(t, u) {
 
 }
 
-function drawGlyph(type, s) {
-  if (type === 'fork') glyphFork(s);
-  else if (type === 'knife') glyphKnife(s);
-  else if (type === 'cup') glyphCup(s);
-  else if (type === 'glass') glyphGlass(s);
-  else if (type === 'pizza') glyphPizza(s);
-  else if (type === 'icecream') glyphIceCream(s);
-  else if (type === 'burger') glyphBurger(s);
-  else if (type === 'fries') glyphFries(s);
-  else glyphBottle(s);
+function drawGlyph(type, g, s) {
+  if (type === 'fork') glyphFork(g, s);
+  else if (type === 'knife') glyphKnife(g, s);
+  else if (type === 'cup') glyphCup(g, s);
+  else if (type === 'glass') glyphGlass(g, s);
+  else if (type === 'pizza') glyphPizza(g, s);
+  else if (type === 'icecream') glyphIceCream(g, s);
+  else if (type === 'burger') glyphBurger(g, s);
+  else if (type === 'fries') glyphFries(g, s);
+  else glyphBottle(g, s);
 }
 
 function drawRestaurant() {
@@ -1127,136 +1127,136 @@ function drawBistro(t, u) {
 
 }
 
-function glyphFork(s) {
-  noStroke();
-  fill('#f5ead9');
+function glyphFork(g, s) {
+  g.noStroke();
+  g.fill('#f5ead9');
   for (let i = -1.5; i <= 1.5; i++) {
-    rect(i * s * 0.2 - s * 0.05, -s, s * 0.1, s * 0.58, s * 0.05);
+    g.rect(i * s * 0.2 - s * 0.05, -s, s * 0.1, s * 0.58, s * 0.05);
   }
-  rect(-s * 0.42, -s * 0.52, s * 0.84, s * 0.22, s * 0.1);
-  rect(-s * 0.09, -s * 0.34, s * 0.18, s * 1.34, s * 0.09);
-  fill('#c9bda8');
-  rect(s * 0.01, -s * 0.34, s * 0.08, s * 1.34, s * 0.04);
+  g.rect(-s * 0.42, -s * 0.52, s * 0.84, s * 0.22, s * 0.1);
+  g.rect(-s * 0.09, -s * 0.34, s * 0.18, s * 1.34, s * 0.09);
+  g.fill('#c9bda8');
+  g.rect(s * 0.01, -s * 0.34, s * 0.08, s * 1.34, s * 0.04);
 }
 
-function glyphKnife(s) {
-  noStroke();
-  fill('#f5ead9');
-  rect(-s * 0.09, -s * 0.1, s * 0.18, s * 1.1, s * 0.09);
-  triangle(-s * 0.09, -s * 0.1, s * 0.3, -s * 0.9, -s * 0.09, -s * 0.95);
-  fill('#c9bda8');
-  rect(s * 0.01, -s * 0.1, s * 0.08, s * 1.1, s * 0.04);
+function glyphKnife(g, s) {
+  g.noStroke();
+  g.fill('#f5ead9');
+  g.rect(-s * 0.09, -s * 0.1, s * 0.18, s * 1.1, s * 0.09);
+  g.triangle(-s * 0.09, -s * 0.1, s * 0.3, -s * 0.9, -s * 0.09, -s * 0.95);
+  g.fill('#c9bda8');
+  g.rect(s * 0.01, -s * 0.1, s * 0.08, s * 1.1, s * 0.04);
 }
 
-function glyphCup(s) {
-  noStroke();
-  fill('#f5ead9');
-  ellipse(0, s * 0.62, s * 1.3, s * 0.16);
-  rect(-s * 0.42, -s * 0.28, s * 0.84, s * 0.82, s * 0.2);
-  fill('#a9714c');
-  ellipse(0, -s * 0.24, s * 0.72, s * 0.14);
+function glyphCup(g, s) {
+  g.noStroke();
+  g.fill('#f5ead9');
+  g.ellipse(0, s * 0.62, s * 1.3, s * 0.16);
+  g.rect(-s * 0.42, -s * 0.28, s * 0.84, s * 0.82, s * 0.2);
+  g.fill('#a9714c');
+  g.ellipse(0, -s * 0.24, s * 0.72, s * 0.14);
   noFill();
-  stroke('#f5ead9');
-  strokeWeight(s * 0.12);
-  arc(s * 0.36, -s * 0.05, s * 0.6, s * 0.55, -HALF_PI, HALF_PI);
-  stroke('#ffffff');
-  strokeWeight(s * 0.07);
-  arc(-s * 0.1, -s * 0.62, s * 0.28, s * 0.34, PI, TWO_PI);
-  arc(s * 0.14, -s * 0.78, s * 0.22, s * 0.3, PI, TWO_PI);
-  noStroke();
+  g.stroke('#f5ead9');
+  g.strokeWeight(s * 0.12);
+  g.arc(s * 0.36, -s * 0.05, s * 0.6, s * 0.55, -HALF_PI, HALF_PI);
+  g.stroke('#ffffff');
+  g.strokeWeight(s * 0.07);
+  g.arc(-s * 0.1, -s * 0.62, s * 0.28, s * 0.34, PI, TWO_PI);
+  g.arc(s * 0.14, -s * 0.78, s * 0.22, s * 0.3, PI, TWO_PI);
+  g.noStroke();
 }
 
-function glyphGlass(s) {
-  noStroke();
-  fill('#ff5d6c');
-  arc(0, -s * 0.3, s * 0.6, s * 0.72, 0.25, PI - 0.25, CHORD);
-  fill('#f5ead9');
-  rect(-s * 0.05, s * 0.2, s * 0.1, s * 0.55, s * 0.05);
-  ellipse(0, s * 0.8, s * 0.62, s * 0.12);
+function glyphGlass(g, s) {
+  g.noStroke();
+  g.fill('#ff5d6c');
+  g.arc(0, -s * 0.3, s * 0.6, s * 0.72, 0.25, PI - 0.25, CHORD);
+  g.fill('#f5ead9');
+  g.rect(-s * 0.05, s * 0.2, s * 0.1, s * 0.55, s * 0.05);
+  g.ellipse(0, s * 0.8, s * 0.62, s * 0.12);
   noFill();
-  stroke('#f5ead9');
-  strokeWeight(s * 0.1);
-  arc(0, -s * 0.3, s * 0.85, s * 1.0, 0, PI);
-  stroke('#ffffff');
-  strokeWeight(s * 0.05);
-  line(-s * 0.18, -s * 0.5, -s * 0.1, -s * 0.18);
-  noStroke();
+  g.stroke('#f5ead9');
+  g.strokeWeight(s * 0.1);
+  g.arc(0, -s * 0.3, s * 0.85, s * 1.0, 0, PI);
+  g.stroke('#ffffff');
+  g.strokeWeight(s * 0.05);
+  g.line(-s * 0.18, -s * 0.5, -s * 0.1, -s * 0.18);
+  g.noStroke();
 }
 
-function glyphPizza(s) {
-  noStroke();
-  fill('#ffd23f');
-  triangle(-s * 0.48, -s * 0.42, s * 0.48, -s * 0.42, 0, s * 0.72);
-  fill('#f0c07e');
-  arc(0, -s * 0.42, s * 0.96, s * 0.3, PI, TWO_PI);
-  fill('#ff5d6c');
-  ellipse(-s * 0.16, -s * 0.05, s * 0.16);
-  ellipse(s * 0.14, s * 0.12, s * 0.14);
-  ellipse(0, s * 0.38, s * 0.12);
-  fill('#7ddf9a');
-  circle(s * 0.1, -s * 0.16, s * 0.07);
-  circle(-s * 0.2, s * 0.22, s * 0.07);
+function glyphPizza(g, s) {
+  g.noStroke();
+  g.fill('#ffd23f');
+  g.triangle(-s * 0.48, -s * 0.42, s * 0.48, -s * 0.42, 0, s * 0.72);
+  g.fill('#f0c07e');
+  g.arc(0, -s * 0.42, s * 0.96, s * 0.3, PI, TWO_PI);
+  g.fill('#ff5d6c');
+  g.ellipse(-s * 0.16, -s * 0.05, s * 0.16);
+  g.ellipse(s * 0.14, s * 0.12, s * 0.14);
+  g.ellipse(0, s * 0.38, s * 0.12);
+  g.fill('#7ddf9a');
+  g.circle(s * 0.1, -s * 0.16, s * 0.07);
+  g.circle(-s * 0.2, s * 0.22, s * 0.07);
 }
 
-function glyphIceCream(s) {
-  noStroke();
-  fill('#f0c07e');
-  triangle(-s * 0.26, s * 0.08, s * 0.26, s * 0.08, 0, s * 0.66);
-  stroke('#c98d4c');
-  strokeWeight(s * 0.04);
-  line(-s * 0.16, s * 0.18, s * 0.1, s * 0.42);
-  line(s * 0.16, s * 0.18, -s * 0.1, s * 0.42);
-  noStroke();
-  fill('#ffb3c8');
-  circle(0, -s * 0.08, s * 0.58);
-  fill('#9ff0e0');
-  circle(0, -s * 0.44, s * 0.42);
-  fill('#ff5d6c');
-  circle(-s * 0.1, -s * 0.66, s * 0.12);
+function glyphIceCream(g, s) {
+  g.noStroke();
+  g.fill('#f0c07e');
+  g.triangle(-s * 0.26, s * 0.08, s * 0.26, s * 0.08, 0, s * 0.66);
+  g.stroke('#c98d4c');
+  g.strokeWeight(s * 0.04);
+  g.line(-s * 0.16, s * 0.18, s * 0.1, s * 0.42);
+  g.line(s * 0.16, s * 0.18, -s * 0.1, s * 0.42);
+  g.noStroke();
+  g.fill('#ffb3c8');
+  g.circle(0, -s * 0.08, s * 0.58);
+  g.fill('#9ff0e0');
+  g.circle(0, -s * 0.44, s * 0.42);
+  g.fill('#ff5d6c');
+  g.circle(-s * 0.1, -s * 0.66, s * 0.12);
 }
 
-function glyphBurger(s) {
-  noStroke();
-  fill('#f0c07e');
-  rect(-s * 0.42, s * 0.16, s * 0.84, s * 0.2, s * 0.09);
-  fill('#a9714c');
-  rect(-s * 0.4, -s * 0.02, s * 0.8, s * 0.18, s * 0.07);
-  fill('#ffd23f');
-  rect(-s * 0.38, -s * 0.14, s * 0.76, s * 0.07, s * 0.03);
-  fill('#7ddf9a');
+function glyphBurger(g, s) {
+  g.noStroke();
+  g.fill('#f0c07e');
+  g.rect(-s * 0.42, s * 0.16, s * 0.84, s * 0.2, s * 0.09);
+  g.fill('#a9714c');
+  g.rect(-s * 0.4, -s * 0.02, s * 0.8, s * 0.18, s * 0.07);
+  g.fill('#ffd23f');
+  g.rect(-s * 0.38, -s * 0.14, s * 0.76, s * 0.07, s * 0.03);
+  g.fill('#7ddf9a');
   for (let i = -1.5; i <= 1.5; i++) {
-    circle(i * s * 0.22, -s * 0.08, s * 0.13);
+    g.circle(i * s * 0.22, -s * 0.08, s * 0.13);
   }
-  fill('#f0c07e');
-  arc(0, -s * 0.1, s * 0.95, s * 0.7, PI, TWO_PI);
-  fill('#f5ead9');
-  circle(-s * 0.12, -s * 0.3, s * 0.06);
-  circle(s * 0.08, -s * 0.38, s * 0.06);
-  circle(s * 0.24, -s * 0.24, s * 0.06);
+  g.fill('#f0c07e');
+  g.arc(0, -s * 0.1, s * 0.95, s * 0.7, PI, TWO_PI);
+  g.fill('#f5ead9');
+  g.circle(-s * 0.12, -s * 0.3, s * 0.06);
+  g.circle(s * 0.08, -s * 0.38, s * 0.06);
+  g.circle(s * 0.24, -s * 0.24, s * 0.06);
 }
 
-function glyphFries(s) {
-  noStroke();
-  fill('#ffd23f');
-  rect(-s * 0.26, -s * 0.62, s * 0.11, s * 0.5, s * 0.03);
-  rect(-s * 0.05, -s * 0.7, s * 0.11, s * 0.55, s * 0.03);
-  rect(s * 0.16, -s * 0.58, s * 0.11, s * 0.46, s * 0.03);
-  fill('#ff5d6c');
-  rect(-s * 0.34, -s * 0.28, s * 0.68, s * 0.62, s * 0.06);
-  fill('#f5ead9');
-  rect(-s * 0.34, -s * 0.1, s * 0.68, s * 0.08, s * 0.03);
+function glyphFries(g, s) {
+  g.noStroke();
+  g.fill('#ffd23f');
+  g.rect(-s * 0.26, -s * 0.62, s * 0.11, s * 0.5, s * 0.03);
+  g.rect(-s * 0.05, -s * 0.7, s * 0.11, s * 0.55, s * 0.03);
+  g.rect(s * 0.16, -s * 0.58, s * 0.11, s * 0.46, s * 0.03);
+  g.fill('#ff5d6c');
+  g.rect(-s * 0.34, -s * 0.28, s * 0.68, s * 0.62, s * 0.06);
+  g.fill('#f5ead9');
+  g.rect(-s * 0.34, -s * 0.1, s * 0.68, s * 0.08, s * 0.03);
 }
 
-function glyphBottle(s) {
-  noStroke();
-  fill('#f0a83c');
-  rect(-s * 0.16, -s * 1.15, s * 0.32, s * 0.16, s * 0.05);
-  rect(-s * 0.11, -s * 1.0, s * 0.22, s * 0.5, s * 0.04);
-  rect(-s * 0.3, -s * 0.52, s * 0.6, s * 1.4, s * 0.14);
-  fill('#ff5d6c');
-  rect(-s * 0.18, -s * 1.19, s * 0.36, s * 0.1, s * 0.04);
-  fill('#f5ead9');
-  rect(-s * 0.22, -s * 0.25, s * 0.44, s * 0.42, s * 0.05);
+function glyphBottle(g, s) {
+  g.noStroke();
+  g.fill('#f0a83c');
+  g.rect(-s * 0.16, -s * 1.15, s * 0.32, s * 0.16, s * 0.05);
+  g.rect(-s * 0.11, -s * 1.0, s * 0.22, s * 0.5, s * 0.04);
+  g.rect(-s * 0.3, -s * 0.52, s * 0.6, s * 1.4, s * 0.14);
+  g.fill('#ff5d6c');
+  g.rect(-s * 0.18, -s * 1.19, s * 0.36, s * 0.1, s * 0.04);
+  g.fill('#f5ead9');
+  g.rect(-s * 0.22, -s * 0.25, s * 0.44, s * 0.42, s * 0.05);
 }
 
 function escapeHtml(s) {
