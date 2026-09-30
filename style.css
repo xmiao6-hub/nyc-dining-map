@@ -14,7 +14,7 @@ ot {
 
 body {
   min-height: 100vh;
-  background: linear-gradient(160deg, #f4fdf6 0%, #e2f6e4 55%, #cff0d4 100%);
+  background: linear-gradient(180deg, #2e6b4c 0%, #bfe0cb 12%, #f7fbf8 26%, #f7fbf8 74%, #bfe0cb 88%, #2e6b4c 100%);
   color: var(--text);
   font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
   display: flex;
@@ -35,6 +35,11 @@ header h1,
 header .subtitle {
   position: relative;
   z-index: 2;
+  color: #f4fbf6;
+}
+
+footer {
+  color: #d9ede2;
 }
 
 #page-header canvas {
@@ -233,7 +238,7 @@ footer {
 }
 
 footer .hint {
-  color: #7fa3b8;
+  color: #a8cbb8;
 }
 
 footer .source {
