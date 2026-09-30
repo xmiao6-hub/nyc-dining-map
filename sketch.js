@@ -65,6 +65,7 @@ function setup() {
   loadData()
     .then((rows) => {
       points = rows.filter(inNYC);
+      console.log('VALID POINTS:', points.length);
       if (!points.length) throw new Error('no valid rows found in data');
       computeBounds();
       layoutMap();
@@ -89,25 +90,48 @@ function setup() {
 }
 
 function loadData() {
-  setStatus('loading CSV\u2026');
+  setStatus('loading data\u2026');
+  let base = null;
+  if (Array.isArray(window.NYC_DINING_DATA) && window.NYC_DINING_DATA.length) {
+    base = window.NYC_DINING_DATA.map((r) => ({
+      name: r[0],
+      street: r[1],
+      borough: r[2] || 'Unknown',
+      type: r[3],
+      lat: r[4],
+      lon: r[5],
+    }));
+    console.log('SNAPSHOT DATA LENGTH:', base.length);
+  }
+  const finish = (rows, tag) => {
+    console.log('DATA LOADED (' + tag + '):', rows.length, 'rows');
+    const valid = rows.filter(inNYC);
+    console.log('VALID POINTS:', valid.length);
+    const bc = { Manhattan: 0, Brooklyn: 0, Queens: 0, Bronx: 0, 'Staten Island': 0, Unknown: 0 };
+    for (const p of valid) bc[p.borough] = (bc[p.borough] || 0) + 1;
+    console.log('MANHATTAN:', bc.Manhattan);
+    console.log('BROOKLYN:', bc.Brooklyn);
+    console.log('QUEENS:', bc.Queens);
+    console.log('BRONX:', bc.Bronx);
+    console.log('STATEN ISLAND:', bc['Staten Island']);
+    console.log('UNKNOWN:', bc.Unknown);
+    return rows;
+  };
   return fetchText(CSV_FILE, 8000)
     .then((text) => {
       const rows = parseCsv(text);
+      console.log('RAW CSV ROWS:', rows.length);
       if (!rows.length) throw new Error('CSV was empty');
-      sourceNote.textContent = 'live CSV loaded';
-      return rows;
+      console.log('CSV HEADER FIELDS:', Object.keys(rows[0]).join(', '));
+      console.log('first 3 lat/lon:', rows.slice(0, 3).map((r) => r.lat + '/' + r.lon).join(' | '));
+      setStatus('live CSV loaded');
+      return finish(rows, 'live CSV');
     })
     .catch((err) => {
-      if (Array.isArray(window.NYC_DINING_DATA) && window.NYC_DINING_DATA.length) {
-        sourceNote.textContent = 'bundled snapshot (start a local server to read the live CSV)';
-        return window.NYC_DINING_DATA.map((r) => ({
-          name: r[0],
-          street: r[1],
-          borough: r[2] || 'Unknown',
-          type: r[3],
-          lat: r[4],
-          lon: r[5],
-        }));
+      console.log('live CSV unavailable:', String(err).substring(0, 80));
+      if (base) {
+        setStatus('bundled snapshot (live CSV unreachable)');
+        return finish(base, 'bundled snapshot');
       }
       throw err;
     });
