@@ -1026,72 +1026,93 @@ function drawCafeSidewalk(t, u) {
 
 }
 
-function drawTruck(t, u) {
+function drawPatio(t, u) {
   noStroke();
   let c = color('#5a7a62');
   c.setAlpha(30);
   fill(c);
-  ellipse(0.2 * u, 0.42 * u, 4.6 * u, 0.16 * u);
-  c = color('#ff8a5c');
-  c.setAlpha(240);
-  fill(c);
-  rect(-2.3 * u, -2.15 * u, 3.6 * u, 2.15 * u, 0.12 * u);
-  c = color('#ffc93c');
-  c.setAlpha(240);
-  fill(c);
-  rect(1.3 * u, -1.8 * u, 1.15 * u, 1.8 * u, 0.1 * u);
-  c = color('#e6f4dc');
-  c.setAlpha(230);
-  fill(c);
-  rect(1.45 * u, -1.65 * u, 0.85 * u, 0.6 * u, 0.06 * u);
-  c = color('#8a3a55');
+  ellipse(0, 0.52 * u, 5.0 * u, 0.16 * u);
+  c = color('#c9a35a');
   c.setAlpha(235);
   fill(c);
-  rect(-1.75 * u, -1.8 * u, 1.7 * u, 0.85 * u, 0.06 * u);
-  const awR = color('#e84393');
-  awR.setAlpha(235);
-  const awC = color('#fffef8');
-  awC.setAlpha(235);
-  for (let i = 0; i < 5; i++) {
-    fill(i % 2 === 0 ? awR : awC);
-    rect(-1.83 * u + i * 0.37 * u, -2.0 * u, 0.37 * u, 0.15 * u);
-    arc(-1.645 * u + i * 0.37 * u, -1.85 * u, 0.37 * u, 0.18 * u, 0, PI);
-  }
-  const sg = color('#e84393');
-  sg.setAlpha(220);
-  fill(sg);
-  circle(-0.55 * u, -0.55 * u, 0.85 * u);
-  fill('#fffef8');
-  for (const ang of [-QUARTER_PI, QUARTER_PI]) {
-    push();
-    translate(-0.55 * u, -0.55 * u);
-    rotate(ang);
-    rect(-0.035 * u, -0.3 * u, 0.07 * u, 0.6 * u, 0.03 * u);
-    pop();
-  }
-  c = color('#4a3a42');
-  c.setAlpha(245);
-  fill(c);
-  circle(-1.45 * u, 0.12 * u, 0.66 * u);
-  circle(1.3 * u, 0.12 * u, 0.66 * u);
-  c = color('#ead9b8');
-  c.setAlpha(235);
-  fill(c);
-  circle(-1.45 * u, 0.12 * u, 0.26 * u);
-  circle(1.3 * u, 0.12 * u, 0.26 * u);
-  c = color('#ffc93c');
-  c.setAlpha(230);
-  fill(c);
-  circle(2.4 * u, -1.1 * u, 0.16 * u);
+  rect(-2.4 * u, 0.14 * u, 4.8 * u, 0.26 * u, 0.04 * u);
   c = color('#8fbf8e');
-  c.setAlpha(200);
+  c.setAlpha(235);
   fill(c);
-  rect(0.6 * u, -2.55 * u, 0.3 * u, 0.4 * u, 0.05 * u);
-  const st = color('#ffffff');
-  st.setAlpha(120 + Math.sin(t * 2) * 40);
-  fill(st);
-  circle(0.75 * u, -2.85 * u, 0.3 * u + Math.sin(t * 3) * 0.08 * u);
-  circle(0.66 * u, -3.15 * u, 0.24 * u + Math.cos(t * 2.4) * 0.06 * u);
+  for (const px of [-2.4, -0.8, 0.8, 2.4]) {
+    rect(px * u - 0.045 * u, -1.05 * u, 0.09 * u, 1.12 * u, 0.03 * u);
+  }
+  rect(-2.4 * u, -1.05 * u, 4.8 * u, 0.09 * u, 0.03 * u);
+  rect(-2.4 * u, -0.55 * u, 4.8 * u, 0.09 * u, 0.03 * u);
+  const wire = color('#e8c46a');
+  wire.setAlpha(160);
+  noFill();
+  stroke(wire);
+  strokeWeight(0.04 * u);
+  beginShape();
+  for (let i = 0; i <= 24; i++) {
+    const k = i / 24;
+    vertex(
+      (1 - k) * (1 - k) * -2.35 * u + 2 * (1 - k) * k * 0 + k * k * 2.35 * u,
+      (1 - k) * (1 - k) * -1.5 * u + 2 * (1 - k) * k * -1.15 * u + k * k * -1.5 * u
+    );
+  }
+  endShape();
+  noStroke();
+  for (let i = 1; i < 8; i++) {
+    const k = i / 8;
+    const bx = (1 - k) * (1 - k) * -2.35 * u + k * k * 2.35 * u;
+    const by = (1 - k) * (1 - k) * -1.5 * u + 2 * (1 - k) * k * -1.15 * u + k * k * -1.5 * u;
+    const bulb = color(i % 2 === 0 ? '#ffc93c' : '#ff8a5c');
+    bulb.setAlpha(200 + Math.sin(t * 2 + i * 1.6) * 55);
+    fill(bulb);
+    circle(bx, by + 0.06 * u, 0.13 * u);
+  }
+  for (const tx of [-1.2, 1.2]) {
+    const poleTop = -1.42 * u;
+    c = color('#fffef8');
+    c.setAlpha(245);
+    fill(c);
+    rect(tx * u - 0.035 * u, poleTop, 0.07 * u, 1.28 * u, 0.03 * u);
+    const umb = color('#ffffff');
+    umb.setAlpha(255);
+    fill(umb);
+    g_arc = arc(tx, poleTop, 1.35 * u, 0.52 * u, PI, TWO_PI);
+    c = color('#e8c46a');
+    c.setAlpha(200);
+    fill(c);
+    arc(tx, poleTop, 1.35 * u, 0.52 * u, PI + 0.5, TWO_PI - 0.5);
+    c = color('#fffef8');
+    c.setAlpha(245);
+    fill(c);
+    circle(tx, poleTop - 0.26 * u, 0.09 * u);
+    c = color('#ffffff');
+    c.setAlpha(255);
+    fill(c);
+    ellipse(tx, -0.62 * u, 0.85 * u, 0.14 * u);
+    rect(tx * u - 0.03 * u, -0.62 * u, 0.06 * u, 0.72 * u, 0.03 * u);
+    ellipse(tx, 0.1 * u, 0.44 * u, 0.09 * u);
+    const chx = tx + 0.58 * u;
+    c = color('#e8712f');
+    c.setAlpha(215);
+    fill(c);
+    rect(chx, -0.5 * u, 0.3 * u, 0.07 * u, 0.02 * u);
+    rect(chx + 0.24 * u, -0.82 * u, 0.06 * u, 0.38 * u, 0.02 * u);
+    rect(chx + 0.02 * u, -0.43 * u, 0.05 * u, 0.34 * u, 0.02 * u);
+    rect(chx + 0.24 * u, -0.43 * u, 0.05 * u, 0.34 * u, 0.02 * u);
+  }
+  for (const px of [-2.75, 2.75]) {
+    c = color('#e8c46a');
+    c.setAlpha(220);
+    fill(c);
+    rect(px * u - 0.28 * u, -0.42 * u, 0.56 * u, 0.5 * u, 0.05 * u);
+    c = color('#2d9a52');
+    c.setAlpha(235);
+    fill(c);
+    circle(px * u - 0.12 * u, -0.56 * u, 0.32 * u);
+    circle(px * u + 0.12 * u, -0.6 * u, 0.28 * u);
+    circle(px * u, -0.74 * u, 0.24 * u);
+  }
 }
 
 function drawGlyph(type, g, s) {
@@ -1117,8 +1138,8 @@ function drawRestaurant() {
     ax = width - 2.75 * u;
     hw = 2.75;
   } else if (licenseFilter === 'Roadway') {
-    ax = width - 2.9 * u;
-    hw = 2.9;
+    ax = width - 2.95 * u;
+    hw = 2.95;
   }
   const mx = mouseX;
   const my = mouseY;
@@ -1136,7 +1157,7 @@ function drawRestaurant() {
     drawingContext.shadowColor = 'rgba(90, 165, 255, 0.5)';
   }
   if (licenseFilter === 'Sidewalk') drawCafeSidewalk(t, u);
-  else if (licenseFilter === 'Roadway') drawTruck(t, u);
+  else if (licenseFilter === 'Roadway') drawPatio(t, u);
   else drawBistro(t, u);
   drawingContext.shadowBlur = 0;
   drawingContext.globalAlpha = 1;
