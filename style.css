@@ -232,7 +232,7 @@ footer {
   flex-wrap: wrap;
   gap: 6px 14px;
   align-items: center;
-  color: var(--muted);
+  color: #d9ede2;
   font-size: 12.5px;
   margin-top: 12px;
 }
