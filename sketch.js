@@ -32,6 +32,7 @@ function setup() {
   const h = Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
   createCanvas(w, h).parent(wrap);
   buildHeaderSpots();
+  buildEdgeSpots();
   tooltip = document.getElementById('tooltip');
   sourceNote = document.getElementById('source-note');
   tooltip.classList.add('hidden');
@@ -467,6 +468,7 @@ function drawCoastline() {
 }
 
 let headerSpots = [];
+let edgeSpots = [];
 
 function buildHeaderSpots() {
   for (const sc of headerSpots) sc.remove();
@@ -487,6 +489,27 @@ function buildHeaderSpots() {
     sc.style('transform', 'translate(-50%, -50%)');
     sc.style('display', 'block');
     headerSpots.push(sc);
+  }
+}
+
+function buildEdgeSpots() {
+  for (const sc of edgeSpots) sc.remove();
+  edgeSpots = [];
+  const defs = [
+    { fn: glyphPizza, s: 60, style: { left: '10px', top: '50%', transform: 'translate(0, -50%) rotate(-10deg)' } },
+    { fn: glyphBurger, s: 60, style: { right: '10px', top: '54%', transform: 'translate(0, -50%) rotate(8deg)' } },
+    { fn: glyphFries, s: 55, style: { left: '50%', bottom: '6px', transform: 'translate(-50%, 0) rotate(-5deg)' } },
+    { fn: glyphIceCream, s: 58, style: { left: '38%', bottom: '6px', transform: 'rotate(6deg)' } },
+  ];
+  for (const d of defs) {
+    const sc = makePixelSprite(d.fn, d.s, 3, 0.5);
+    sc.style('position', 'fixed');
+    sc.style('z-index', '-1');
+    sc.style('display', 'block');
+    sc.style('pointer-events', 'none');
+    for (const k in d.style) sc.style(k, d.style[k]);
+    sc.parent(document.body);
+    edgeSpots.push(sc);
   }
 }
 
@@ -1249,6 +1272,7 @@ function escapeHtml(s) {
 function windowResized() {
   buildBgLayer();
   buildHeaderSpots();
+  buildEdgeSpots();
   initProps();
   if (!ready) return;
   const wrap = document.getElementById('canvas-wrap');
