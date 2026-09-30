@@ -677,7 +677,7 @@ function makePixelSprite(fn, s, pix, alpha) {
         gr = Math.min(255, Math.round(gr * f));
         b = Math.min(255, Math.round(b * f));
       }
-      const hsh = Math.abs((i * 73856093) ^ (j * 19349663)) % 13 - 6;
+      const hsh = Math.abs((i * 73856093) ^ (j * 19349663)) % 25 - 12;
       r = Math.max(0, Math.min(255, r + hsh));
       gr = Math.max(0, Math.min(255, gr + hsh));
       b = Math.max(0, Math.min(255, b + hsh));
