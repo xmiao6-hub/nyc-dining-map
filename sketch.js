@@ -475,7 +475,7 @@ function decorateBgLayer() {
 }
 
 function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
-  const half = Math.ceil((s * 1.25) / pix);
+  const half = Math.ceil((s * 1.75) / pix);
   const off = createGraphics(half * 2, half * 2);
   off.pixelDensity(1);
   off.noStroke();
@@ -495,7 +495,7 @@ function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
       const gr = Math.min(255, Math.round(off.pixels[k + 1] / 32) * 32);
       const b = Math.min(255, Math.round(off.pixels[k + 2] / 32) * 32);
       g.fill(r, gr, b);
-      g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix, pix);
+      g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix + 1, pix + 1);
     }
   }
   g.drawingContext.globalAlpha = 1;
@@ -583,37 +583,36 @@ function spotCupcake(g, s) {
   let c = g.color('#0a0f1e');
   c.setAlpha(70);
   g.fill(c);
-  g.ellipse(0, s * 0.62, s * 0.75, s * 0.1);
-  c = g.color('#ff8a5c');
-  c.setAlpha(210);
+  g.ellipse(s * 0.05, s * 0.64, s * 1.05, s * 0.12);
+  const xAt = (y) => -s * 0.42 + ((s * 0.5 - y) / (s * 0.85)) * s * 0.84;
+  const bands = [
+    [-s * 0.35, -s * 0.15, '#ffd1de'],
+    [-s * 0.15, s * 0.05, '#f0c07e'],
+    [s * 0.05, s * 0.25, '#ffb3c8'],
+    [s * 0.25, s * 0.5, '#f0c07e'],
+  ];
+  for (const bd of bands) {
+    c = g.color(bd[2]);
+    c.setAlpha(215);
+    g.fill(c);
+    g.beginShape();
+    g.vertex(xAt(bd[0]), bd[0]);
+    g.vertex(s * 0.42, bd[0]);
+    g.vertex(s * 0.42, bd[1]);
+    g.vertex(xAt(bd[1]), bd[1]);
+    g.endShape(g.CLOSE);
+  }
+  c = g.color('#f5ead9');
+  c.setAlpha(170);
   g.fill(c);
-  g.quad(-s * 0.42, -s * 0.12, s * 0.42, -s * 0.12, s * 0.26, s * 0.55, -s * 0.26, s * 0.55);
-  c = g.color('#e06a3a');
-  c.setAlpha(190);
-  g.fill(c);
-  g.quad(-s * 0.28, -s * 0.12, -s * 0.13, -s * 0.12, -s * 0.09, s * 0.55, -s * 0.23, s * 0.55);
-  g.quad(s * 0.13, -s * 0.12, s * 0.28, -s * 0.12, s * 0.23, s * 0.55, s * 0.09, s * 0.55);
-  c = g.color('#ffb3c8');
-  c.setAlpha(215);
-  g.fill(c);
-  g.circle(-s * 0.24, -s * 0.24, s * 0.42);
-  g.circle(s * 0.24, -s * 0.24, s * 0.42);
-  c = g.color('#ffd1de');
-  c.setAlpha(215);
-  g.fill(c);
-  g.circle(-s * 0.12, -s * 0.46, s * 0.38);
-  g.circle(s * 0.12, -s * 0.46, s * 0.38);
-  c = g.color('#ffb3c8');
-  c.setAlpha(215);
-  g.fill(c);
-  g.circle(0, -s * 0.66, s * 0.36);
+  g.ellipse(s * 0.05, s * 0.56, s * 1.15, s * 0.14);
   c = g.color('#ff5d6c');
   c.setAlpha(230);
   g.fill(c);
-  g.circle(0, -s * 0.86, s * 0.16);
+  g.circle(s * 0.32, -s * 0.46, s * 0.18);
   g.stroke(c);
   g.strokeWeight(s * 0.05);
-  g.line(0, -s * 0.94, s * 0.08, -s * 1.04);
+  g.line(s * 0.32, -s * 0.56, s * 0.4, -s * 0.66);
   g.noStroke();
 }
 
