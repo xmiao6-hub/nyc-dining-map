@@ -496,10 +496,10 @@ function buildEdgeSpots() {
   for (const sc of edgeSpots) sc.remove();
   edgeSpots = [];
   const defs = [
-    { fn: glyphPizza, s: 52, style: { left: '6px', top: '48%', transform: 'translate(0, -50%) rotate(-10deg)' } },
-    { fn: glyphBurger, s: 52, style: { right: '6px', top: '54%', transform: 'translate(0, -50%) rotate(8deg)' } },
-    { fn: glyphFries, s: 48, style: { left: '30%', bottom: '6px', transform: 'translate(-50%, 0) rotate(-5deg)' } },
-    { fn: glyphIceCream, s: 50, style: { left: '70%', bottom: '6px', transform: 'translate(-50%, 0) rotate(6deg)' } },
+    { fn: glyphPizza, s: 70, style: { left: '6px', top: '30%', transform: 'translate(0, -50%) rotate(-10deg)' } },
+    { fn: glyphFries, s: 66, style: { left: '6px', top: '70%', transform: 'translate(0, -50%) rotate(-5deg)' } },
+    { fn: glyphBurger, s: 70, style: { right: '6px', top: '26%', transform: 'translate(0, -50%) rotate(8deg)' } },
+    { fn: glyphIceCream, s: 68, style: { right: '6px', top: '68%', transform: 'translate(0, -50%) rotate(6deg)' } },
   ];
   for (const d of defs) {
     const sc = makePixelSprite(d.fn, d.s, 3, 0.55);
