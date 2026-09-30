@@ -502,6 +502,11 @@ function drawCoastline() {
 
 let headerSpots = [];
 let edgeSpots = [];
+let spotSprites = [];
+let scentOverlay = null;
+let scents = [];
+let pageMX = -999;
+let pageMY = -999;
 
 function buildHeaderSpots() {
   for (const s of headerSpots) s.cv.remove();
