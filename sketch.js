@@ -1456,7 +1456,6 @@ function escapeHtml(s) {
 }
 
 function windowResized() {
-  const fs = document.fullscreenElement || document.webkitFullscreenElement;
   const wrap = document.getElementById('canvas-wrap');
   const w = fs ? windowWidth : Math.max(320, wrap.clientWidth);
   const h = fs ? windowHeight : Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
