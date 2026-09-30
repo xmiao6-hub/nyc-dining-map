@@ -35,27 +35,6 @@ function setup() {
   noSmooth();
   buildHeaderSpots();
   buildEdgeSpots();
-  const fsBtn = document.getElementById('fs-btn');
-  if (fsBtn) {
-    fsBtn.addEventListener('click', () => {
-      const el = document.documentElement;
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
-      } else {
-        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-      }
-    });
-    const onFs = () => {
-      const active = document.fullscreenElement || document.webkitFullscreenElement;
-      fsBtn.textContent = active ? 'Exit Fullscreen' : '⛶ Fullscreen';
-      document.body.style.padding = active ? '0' : '';
-      const panel = document.querySelector('.panel');
-      if (panel) panel.style.padding = active ? '4px' : '';
-      windowResized();
-    };
-    document.addEventListener('fullscreenchange', onFs);
-    document.addEventListener('webkitfullscreenchange', onFs);
-  }
   tooltip = document.getElementById('tooltip');
   sourceNote = document.getElementById('source-note');
   tooltip.classList.add('hidden');
