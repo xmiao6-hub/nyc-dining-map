@@ -529,10 +529,10 @@ function buildEdgeSpots() {
   edgeSpots = [];
   const defs = [
     { fn: glyphPizza, s: 70, style: { left: '6px', top: '28%', transform: 'translate(0, -50%) rotate(-10deg)' } },
-    { fn: spotSalad, s: 58, style: { left: '26px', top: '49%', transform: 'translate(0, -50%) rotate(4deg)' } },
-    { fn: glyphFries, s: 66, style: { left: '2px', top: '71%', transform: 'translate(0, -50%) rotate(-5deg)' } },
-    { fn: glyphBurger, s: 70, style: { right: '6px', top: '26%', transform: 'translate(0, -50%) rotate(8deg)' } },
-    { fn: glyphIceCream, s: 68, style: { right: '6px', top: '68%', transform: 'translate(0, -50%) rotate(6deg)' } },
+    { fn: spotSalad, s: 58, style: { left: '64px', top: '49%', transform: 'translate(0, -50%) rotate(4deg)' } },
+    { fn: glyphFries, s: 66, style: { left: '0px', top: '71%', transform: 'translate(0, -50%) rotate(-5deg)' } },
+    { fn: glyphBurger, s: 70, style: { right: '4px', top: '26%', transform: 'translate(0, -50%) rotate(8deg)' } },
+    { fn: glyphIceCream, s: 68, style: { right: '58px', top: '68%', transform: 'translate(0, -50%) rotate(6deg)' } },
   ];
   for (const d of defs) {
     const sc = makePixelSprite(d.fn, d.s, 3, 0.55);
@@ -886,7 +886,7 @@ function drawCafeSidewalk(t, u) {
   rect(-1.9 * u, -2.15 * u, 2.9 * u, 1.35 * u, 0.08 * u);
   noStroke();
   const shine = color('#ffffff');
-  shine.setAlpha(255);
+  shine.setAlpha(150);
   fill(shine);
   quad(-1.78 * u, -0.92 * u, -1.64 * u, -0.92 * u, -1.28 * u, -2.03 * u, -1.42 * u, -2.03 * u);
   quad(-1.52 * u, -0.92 * u, -1.46 * u, -0.92 * u, -1.1 * u, -2.03 * u, -1.16 * u, -2.03 * u);
@@ -906,19 +906,19 @@ function drawCafeSidewalk(t, u) {
   const poleC = color('#d9d0f2');
   const tableC = color('#ffffff');
   const chairC = color('#cabfe8');
-  for (const um of [[-1.45, 2.35, '#9a6fd6'], [0.4, 2.15, '#c9a05a']]) {
+  for (const um of [[-1.45, 2.35, '#9a6fd6'], [0.4, 2.15, '#ffffff']]) {
     const ux = um[0] * u;
     const poleTop = -um[1] * u;
-    poleC.setAlpha(180);
+    poleC.setAlpha(245);
     fill(poleC);
     rect(ux - 0.035 * u, poleTop, 0.07 * u, um[1] * u - 0.22 * u, 0.03 * u);
     const umb = color(um[2]);
-    umb.setAlpha(210);
+    umb.setAlpha(255);
     fill(umb);
     arc(ux, poleTop, 1.7 * u, 0.62 * u, PI, TWO_PI);
     fill(poleC);
     circle(ux, poleTop - 0.34 * u, 0.1 * u);
-    tableC.setAlpha(210);
+    tableC.setAlpha(255);
     fill(tableC);
     ellipse(ux, -0.88 * u, 0.78 * u, 0.13 * u);
     rect(ux - 0.03 * u, -0.88 * u, 0.06 * u, 0.62 * u, 0.03 * u);
