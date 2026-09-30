@@ -42,6 +42,10 @@ footer {
   color: #d9ede2;
 }
 
+#fs-btn {
+  margin-left: 6px;
+}
+
 #page-header canvas {
   position: absolute;
   z-index: 0;
@@ -50,10 +54,10 @@ footer {
 }
 
 header h1 {
-  font-family: "Baloo 2", "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: "Luckiest Guy", "Baloo 2", "Avenir Next", sans-serif;
   font-size: 30px;
-  font-weight: 800;
-  letter-spacing: 1px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
 }
 
