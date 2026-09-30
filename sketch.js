@@ -46,7 +46,11 @@ function setup() {
       }
     });
     const onFs = () => {
-      fsBtn.textContent = (document.fullscreenElement || document.webkitFullscreenElement) ? 'Exit Fullscreen' : '⛶ Fullscreen';
+      const active = document.fullscreenElement || document.webkitFullscreenElement;
+      fsBtn.textContent = active ? 'Exit Fullscreen' : '⛶ Fullscreen';
+      document.body.style.padding = active ? '0' : '';
+      const panel = document.querySelector('.panel');
+      if (panel) panel.style.padding = active ? '4px' : '';
       windowResized();
     };
     document.addEventListener('fullscreenchange', onFs);
@@ -266,6 +270,8 @@ function redrawLayer() {
 }
 
 function draw() {
+  resetMatrix();
+  projectPoints();
   updateSpriteFX();
   image(bgLayer, 0, 0);
   drawRestaurant();
@@ -1447,18 +1453,34 @@ function escapeHtml(s) {
 }
 
 function windowResized() {
+  const fs = document.fullscreenElement || document.webkitFullscreenElement;
+  const wrap = document.getElementById('canvas-wrap');
+  const w = fs ? windowWidth : Math.max(320, wrap.clientWidth);
+  const h = fs ? windowHeight : Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
+  resizeCanvas(w, h);
+  layoutMap();
+  redrawLayer();
   buildBgLayer();
   buildHeaderSpots();
   buildEdgeSpots();
   if (scentOverlay) scentOverlay.resizeCanvas(window.innerWidth, window.innerHeight);
   initProps();
-  if (!ready) return;
-  const wrap = document.getElementById('canvas-wrap');
-  const w = Math.max(320, wrap.clientWidth);
-  const h = Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
-  resizeCanvas(w, h);
-  layoutMap();
-  projectPoints();
-  redrawLayer();
   fadeStart = millis();
+  reportProjection();
+}
+
+function reportProjection() {
+  if (!sourceNote || !ready || !points.length || !mapRect) return;
+  const midLat = radians((dataBounds.latMin + dataBounds.latMax) / 2);
+  const scale = mapRect.w / ((dataBounds.lonMax - dataBounds.lonMin) * 69.17 * Math.cos(midLat));
+  const p0 = points[0];
+  const p1 = points[1] || p0;
+  const p2 = points[2] || p0;
+  sourceNote.textContent = 'w=' + width + ' h=' + height +
+    ' scale=' + scale.toFixed(2) +
+    ' ox=' + mapRect.x.toFixed(0) + ' oy=' + mapRect.y.toFixed(0) +
+    ' n=' + points.length +
+    ' p0=(' + p0.x.toFixed(0) + ',' + p0.y.toFixed(0) + ')' +
+    ' p1=(' + p1.x.toFixed(0) + ',' + p1.y.toFixed(0) + ')' +
+    ' p2=(' + p2.x.toFixed(0) + ',' + p2.y.toFixed(0) + ')';
 }
