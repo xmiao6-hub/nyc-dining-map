@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="style.css">
+<script>
+window.__errs = [];
+window.onerror = function (msg, src, line) { window.__errs.push(msg + ' @' + line); return false; };
+</script>
+<script src="p5.min.js"></script></head>
+<body><main class="panel">
+<header id="page-header"><h1>T</h1></header>
+<section class="controls">
+  <div id="borough-chips" class="chips"></div>
+</section>
+<div id="canvas-wrap"><div id="tooltip" class="hidden"></div></div>
+</main>
+<pre id="report">pending</pre>
+<script src="geo.js"></script>
+<script src="data.js"></script>
+<script src="sketch.js"></script>
+<script>
+setTimeout(function () {
+  var out = { errs: window.__errs.slice() };
+  try {
+    var c = document.querySelector('#canvas-wrap canvas');
+    out.w0 = c.width;
+    out.spriteCount = document.querySelectorAll('.spot-wrap').length;
+    out.edgeLefts = (function () { var a = []; document.querySelectorAll('.spot-wrap.edge').forEach(function (w) { a.push(w.style.left); }); return a.join('|'); })();
+    document.getElementById('canvas-wrap').style.width = '1400px';
+    windowResized();
+    out.wAfterResize = c.width;
+    document.getElementById('canvas-wrap').style.width = '';
+    windowResized();
+    out.wRestored = c.width;
+    out.chips = document.querySelectorAll('.chip').length;
+  } catch (e) { out.error = String(e); }
+  document.getElementById('report').textContent = 'REPORT ' + JSON.stringify(out);
+}, 9000);
+</script></body></html>

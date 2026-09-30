@@ -31,6 +31,20 @@ header {
   position: relative;
 }
 
+:fullscreen body {
+  padding: 0;
+}
+
+:fullscreen .panel {
+  width: 100vw;
+  max-width: none;
+  padding: 0 14px;
+}
+
+:fullscreen #canvas-wrap {
+  width: 100vw;
+}
+
 header h1,
 header .subtitle {
   position: relative;

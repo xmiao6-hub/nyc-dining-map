@@ -544,9 +544,11 @@ function buildEdgeSpots() {
     { fn: glyphBurger, s: 70, right: '4px', top: '26%', bt: 'translate(0, -50%) rotate(8deg)', kind: 'food' },
     { fn: glyphIceCream, s: 68, right: '58px', top: '68%', bt: 'translate(0, -50%) rotate(6deg)', kind: 'food' },
   ];
+  let i = 0;
   for (const d of defs) {
     const cv = makePixelSprite(d.fn, d.s, 3, 0.5);
     cv.style('display', 'block');
+    cv.elt.style.animationDelay = (-(i * 0.09)).toFixed(2) + 's';
     const wrap = document.createElement('div');
     wrap.className = 'spot-wrap edge';
     wrap.style.position = 'fixed';
@@ -555,10 +557,10 @@ function buildEdgeSpots() {
     wrap.style.top = d.top;
     if (d.right) wrap.style.right = d.right;
     wrap.style.transform = d.bt;
-    wrap.style.pointerEvents = 'none';
     wrap.appendChild(cv.elt);
     document.body.appendChild(wrap);
-    edgeSpots.push({ cv, wrap, bt: d.bt, kind: d.kind });
+    edgeSpots.push({ cv, wrap, bt: d.bt, kind: d.kind, x: d.left, y: parseFloat(d.top) / 100, offsetX: 0, offsetY: 0, phase: i * 1.17, hovered: false, energy: 0 });
+    i++;
   }
   spotSprites = [...headerSpots, ...edgeSpots];
   buildScentOverlay();
@@ -584,11 +586,12 @@ function updateSpriteFX() {
   const t = millis() / 1000;
   for (const sp of spotSprites) {
     const r = sp.cv.elt.getBoundingClientRect();
-    const hovered = pageMX >= r.left && pageMX <= r.right && pageMY >= r.top && pageMY <= r.bottom;
+    sp.hovered = pageMX >= r.left && pageMX <= r.right && pageMY >= r.top && pageMY <= r.bottom;
+    const hovered = sp.hovered;
     sp.energy = sp.energy || 0;
     if (hovered) {
       sp.energy = 1;
-      if (Math.random() < 0.3) {
+      if (Math.sin(t * 1.4 + sp.phase) > -0.4 && Math.random() < 0.3) {
         scents.push({
           x: r.left + Math.random() * r.width,
           y: r.top + r.height * (0.1 + Math.random() * 0.3),
@@ -876,6 +879,25 @@ function drawProps() {
       prop.cx = prop.x * width + Math.sin(t * prop.swayFreq + prop.phase) * prop.swayAmp;
       prop.cy = prop.y * height + Math.cos(t * prop.swayFreq * 0.8 + prop.phase) * prop.swayAmp * 0.5;
       prop.rotNow = prop.rot + Math.sin(t * prop.spinFreq + prop.phase) * prop.spinAmp;
+      prop.hovered = mouseX >= 0 && mouseY >= 0 && mouseX <= width && mouseY <= height &&
+        (mouseX - prop.cx) ** 2 + (mouseY - prop.cy) ** 2 < (prop.s * 0.9) ** 2;
+      prop.energy = prop.hovered ? Math.min(1, (prop.energy || 0) + 0.25) : (prop.energy || 0) * 0.88;
+      if (prop.hovered && Math.random() < 0.3) {
+        const crc = document.querySelector('#canvas-wrap canvas').getBoundingClientRect();
+        scents.push({
+          x: crc.left + prop.cx + (Math.random() - 0.5) * prop.s * 0.7,
+          y: crc.top + prop.cy - prop.s * 0.25,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: -(0.5 + Math.random() * 0.6),
+          life: 0,
+          max: 60 + Math.random() * 40,
+          size: 5 + Math.random() * 5,
+          col: Math.random() < 0.5 ? '#ffd9ec' : '#d9f2c8',
+          ph: Math.random() * TWO_PI,
+        });
+      }
+      prop.jx = (Math.random() - 0.5) * 7 * prop.energy;
+      prop.jy = (Math.random() - 0.5) * 7 * prop.energy;
       if (mouseX >= 0 && mouseY >= 0 && mouseX <= width && mouseY <= height) {
         const d2 = (mouseX - prop.cx) ** 2 + (mouseY - prop.cy) ** 2;
         if (d2 < (prop.s * 0.85) ** 2) {
@@ -885,7 +907,7 @@ function drawProps() {
       }
       drawingContext.globalAlpha = (prop.alpha / 255) * (0.72 + 0.28 * Math.sin(t * 0.6 + prop.phase));
       push();
-      translate(prop.cx, prop.cy);
+      translate(prop.cx + (prop.jx || 0), prop.cy + (prop.jy || 0));
       rotate(prop.rotNow);
       drawGlyph(prop.type, window, prop.s);
       pop();
