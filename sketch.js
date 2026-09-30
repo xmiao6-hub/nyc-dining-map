@@ -509,7 +509,7 @@ let pageMX = -999;
 let pageMY = -999;
 
 function buildHeaderSpots() {
-  for (const s of headerSpots) s.cv.remove();
+  for (const s of headerSpots) s.wrap.remove();
   headerSpots = [];
   const header = document.getElementById('page-header');
   if (!header) return;
@@ -520,18 +520,21 @@ function buildHeaderSpots() {
   ];
   for (const d of defs) {
     const cv = makePixelSprite(d.fn, d.s, 3, 0.55);
-    cv.parent(header);
-    cv.style('position', 'absolute');
-    cv.style('left', Math.round(d.fx * 100) + '%');
-    cv.style('top', '50%');
-    cv.elt.style.setProperty('--tf', d.bt);
-    cv.style('display', 'block');
-    headerSpots.push({ cv, bt: d.bt, kind: d.kind });
+    const wrap = document.createElement('div');
+    wrap.className = 'spot-wrap';
+    wrap.style.position = 'absolute';
+    wrap.style.left = Math.round(d.fx * 100) + '%';
+    wrap.style.top = '50%';
+    wrap.style.transform = d.bt;
+    wrap.style.pointerEvents = 'none';
+    wrap.appendChild(cv.elt);
+    header.appendChild(wrap);
+    headerSpots.push({ cv, wrap, bt: d.bt, kind: d.kind });
   }
 }
 
 function buildEdgeSpots() {
-  for (const s of edgeSpots) s.cv.remove();
+  for (const s of edgeSpots) s.wrap.remove();
   edgeSpots = [];
   const defs = [
     { fn: glyphPizza, s: 70, left: '8px', top: '28%', bt: 'translate(0, -50%) rotate(-10deg)', kind: 'food' },
@@ -542,16 +545,18 @@ function buildEdgeSpots() {
   ];
   for (const d of defs) {
     const cv = makePixelSprite(d.fn, d.s, 3, 0.5);
-    cv.style('position', 'fixed');
-    cv.style('z-index', '2');
-    cv.style('display', 'block');
-    cv.style('pointer-events', 'none');
-    cv.style('left', d.left);
-    cv.style('top', d.top);
-    if (d.right) cv.style('right', d.right);
-    cv.elt.style.setProperty('--tf', d.bt);
-    cv.parent(document.body);
-    edgeSpots.push({ cv, bt: d.bt, kind: d.kind });
+    const wrap = document.createElement('div');
+    wrap.className = 'spot-wrap edge';
+    wrap.style.position = 'fixed';
+    wrap.style.zIndex = 2;
+    wrap.style.left = d.left;
+    wrap.style.top = d.top;
+    if (d.right) wrap.style.right = d.right;
+    wrap.style.transform = d.bt;
+    wrap.style.pointerEvents = 'none';
+    wrap.appendChild(cv.elt);
+    document.body.appendChild(wrap);
+    edgeSpots.push({ cv, wrap, bt: d.bt, kind: d.kind });
   }
   spotSprites = [...headerSpots, ...edgeSpots];
   buildScentOverlay();
@@ -1021,140 +1026,72 @@ function drawCafeSidewalk(t, u) {
 
 }
 
-function drawShedRoadway(t, u) {
+function drawTruck(t, u) {
   noStroke();
-  const deck = color('#d9d0f2');
-  deck.setAlpha(110);
-  fill(deck);
-  rect(-2.7 * u, -0.24 * u, 5.4 * u, 0.24 * u, 0.05 * u);
-
-  const inside = color('#ffc93c');
-  inside.setAlpha(Math.min(255, Math.round(135 + Math.sin(t * 0.7) * 30)));
-  fill(inside);
-  rect(-2.25 * u, -1.62 * u, 4.5 * u, 1.38 * u, 0.06 * u);
-
-  const wall = color('#e6f4dc');
-  wall.setAlpha(165);
-  fill(wall);
-  rect(-2.25 * u, -1.62 * u, 4.5 * u, 1.38 * u, 0.06 * u);
-  const slat = color('#5c6f92');
-  slat.setAlpha(210);
-  fill(slat);
-  rect(-2.25 * u, -1.2 * u, 4.5 * u, 0.05 * u, 0.02 * u);
-  rect(-2.25 * u, -0.75 * u, 4.5 * u, 0.05 * u, 0.02 * u);
-
-  const post = color('#d9d0f2');
-  post.setAlpha(185);
-  fill(post);
-  for (const px of [-2.2, -0.75, 0.75, 2.2]) {
-    rect(px * u - 0.05 * u, -2.4 * u, 0.1 * u, 2.16 * u, 0.03 * u);
+  let c = color('#5a7a62');
+  c.setAlpha(30);
+  fill(c);
+  ellipse(0.2 * u, 0.42 * u, 4.6 * u, 0.16 * u);
+  c = color('#ff8a5c');
+  c.setAlpha(240);
+  fill(c);
+  rect(-2.3 * u, -2.15 * u, 3.6 * u, 2.15 * u, 0.12 * u);
+  c = color('#ffc93c');
+  c.setAlpha(240);
+  fill(c);
+  rect(1.3 * u, -1.8 * u, 1.15 * u, 1.8 * u, 0.1 * u);
+  c = color('#e6f4dc');
+  c.setAlpha(230);
+  fill(c);
+  rect(1.45 * u, -1.65 * u, 0.85 * u, 0.6 * u, 0.06 * u);
+  c = color('#8a3a55');
+  c.setAlpha(235);
+  fill(c);
+  rect(-1.75 * u, -1.8 * u, 1.7 * u, 0.85 * u, 0.06 * u);
+  const awR = color('#e84393');
+  awR.setAlpha(235);
+  const awC = color('#fffef8');
+  awC.setAlpha(235);
+  for (let i = 0; i < 5; i++) {
+    fill(i % 2 === 0 ? awR : awC);
+    rect(-1.83 * u + i * 0.37 * u, -2.0 * u, 0.37 * u, 0.15 * u);
+    arc(-1.645 * u + i * 0.37 * u, -1.85 * u, 0.37 * u, 0.18 * u, 0, PI);
   }
-
-  const roof = color('#fffef8');
-  roof.setAlpha(185);
-  fill(roof);
-  quad(-2.75 * u, -2.45 * u, 2.75 * u, -2.45 * u, 2.95 * u, -2.05 * u, -2.95 * u, -2.05 * u);
-  const stripeR = color('#ff8a5c');
-  stripeR.setAlpha(165);
-  const stripeC = color('#fffef8');
-  stripeC.setAlpha(210);
-  for (let i = 0; i < 6; i++) {
-    const a0 = -2.75 + (4.5 * i) / 6;
-    const a1 = -2.75 + (4.5 * (i + 1)) / 6;
-    const b0 = -2.95 + (4.5 * i) / 6;
-    const b1 = -2.95 + (4.5 * (i + 1)) / 6;
-    fill(i % 2 === 0 ? stripeR : stripeC);
-    quad(a0 * u, -2.45 * u, a1 * u, -2.45 * u, b1 * u, -2.05 * u, b0 * u, -2.05 * u);
-  }
-  const roofTrim = color('#d9d0f2');
-  roofTrim.setAlpha(155);
-  noFill();
-  stroke(roofTrim);
-  strokeWeight(0.04 * u);
-  quad(-2.75 * u, -2.45 * u, 2.75 * u, -2.45 * u, 2.95 * u, -2.05 * u, -2.95 * u, -2.05 * u);
-  noStroke();
-
-  const sgLine = color('#d9a3b3');
-  sgLine.setAlpha(150);
-  noFill();
-  stroke(sgLine);
-  strokeWeight(0.05 * u);
-  line(1.7 * u, -2.05 * u, 1.7 * u, -1.62 * u);
-  circle(1.7 * u, -1.3 * u, 0.72 * u);
-  noStroke();
-  const sgFill = color('#e84393');
-  sgFill.setAlpha(210);
-  fill(sgFill);
+  const sg = color('#e84393');
+  sg.setAlpha(220);
+  fill(sg);
+  circle(-0.55 * u, -0.55 * u, 0.85 * u);
+  fill('#fffef8');
   for (const ang of [-QUARTER_PI, QUARTER_PI]) {
     push();
-    translate(1.7 * u, -1.3 * u);
+    translate(-0.55 * u, -0.55 * u);
     rotate(ang);
-    rect(-0.032 * u, -0.27 * u, 0.064 * u, 0.54 * u, 0.03 * u);
+    rect(-0.035 * u, -0.3 * u, 0.07 * u, 0.6 * u, 0.03 * u);
     pop();
   }
-
-  const wire = color('#d9d0f2');
-  wire.setAlpha(110);
-  noFill();
-  stroke(wire);
-  strokeWeight(0.035 * u);
-  beginShape();
-  for (let i = 0; i <= 24; i++) {
-    const k = i / 24;
-    vertex(
-      (1 - k) * (1 - k) * -2.3 * u + k * k * 2.3 * u,
-      (1 - k) * (1 - k) * -2.0 * u + 2 * (1 - k) * k * -1.72 * u + k * k * -2.0 * u
-    );
-  }
-  endShape();
-  noStroke();
-  for (let i = 1; i < 8; i++) {
-    const k = i / 8;
-    const bx = (1 - k) * (1 - k) * -2.3 * u + k * k * 2.3 * u;
-    const by = (1 - k) * (1 - k) * -2.0 * u + 2 * (1 - k) * k * -1.72 * u + k * k * -2.0 * u;
-    const bulb = color(i % 2 === 0 ? '#ffc93c' : '#ff8a5c');
-    bulb.setAlpha(Math.min(255, Math.round(170 + Math.sin(t * 2 + i * 1.7) * 55)));
-    fill(bulb);
-    circle(bx, by + 0.07 * u, 0.13 * u);
-  }
-
-  const furn = color('#d9d0f2');
-  furn.setAlpha(190);
-  fill(furn);
-  rect(-0.9 * u, -0.95 * u, 1.8 * u, 0.09 * u, 0.03 * u);
-  rect(-0.82 * u, -0.86 * u, 0.08 * u, 0.62 * u, 0.03 * u);
-  rect(0.74 * u, -0.86 * u, 0.08 * u, 0.62 * u, 0.03 * u);
-  rect(-1.7 * u, -0.68 * u, 0.42 * u, 0.07 * u, 0.03 * u);
-  rect(-1.53 * u, -0.61 * u, 0.08 * u, 0.37 * u, 0.03 * u);
-  rect(1.28 * u, -0.68 * u, 0.42 * u, 0.07 * u, 0.03 * u);
-  rect(1.45 * u, -0.61 * u, 0.08 * u, 0.37 * u, 0.03 * u);
-
-  const box = color('#fffef8');
-  box.setAlpha(195);
-  fill(box);
-  rect(-3.0 * u, -0.78 * u, 0.6 * u, 0.54 * u, 0.05 * u);
-  const bush = color('#2ec4b6');
-  bush.setAlpha(225);
-  fill(bush);
-  circle(-2.88 * u, -0.94 * u, 0.36 * u);
-  circle(-2.62 * u, -0.97 * u, 0.3 * u);
-  circle(-2.75 * u, -1.12 * u, 0.26 * u);
-
-  const hPost = color('#d9d0f2');
-  hPost.setAlpha(190);
-  fill(hPost);
-  rect(2.72 * u, -1.7 * u, 0.09 * u, 1.46 * u, 0.04 * u);
-  rect(2.62 * u, -0.3 * u, 0.3 * u, 0.07 * u, 0.03 * u);
-  const hCap = color('#fffef8');
-  hCap.setAlpha(210);
-  fill(hCap);
-  arc(2.765 * u, -1.7 * u, 0.72 * u, 0.3 * u, PI, TWO_PI);
-  const hGlow = color('#ff8a5c');
-  hGlow.setAlpha(Math.min(255, Math.round(140 + Math.sin(t * 1.1) * 40)));
-  fill(hGlow);
-  circle(2.765 * u, -1.58 * u, 0.3 * u);
-
-
+  c = color('#4a3a42');
+  c.setAlpha(245);
+  fill(c);
+  circle(-1.45 * u, 0.12 * u, 0.66 * u);
+  circle(1.3 * u, 0.12 * u, 0.66 * u);
+  c = color('#ead9b8');
+  c.setAlpha(235);
+  fill(c);
+  circle(-1.45 * u, 0.12 * u, 0.26 * u);
+  circle(1.3 * u, 0.12 * u, 0.26 * u);
+  c = color('#ffc93c');
+  c.setAlpha(230);
+  fill(c);
+  circle(2.4 * u, -1.1 * u, 0.16 * u);
+  c = color('#8fbf8e');
+  c.setAlpha(200);
+  fill(c);
+  rect(0.6 * u, -2.55 * u, 0.3 * u, 0.4 * u, 0.05 * u);
+  const st = color('#ffffff');
+  st.setAlpha(120 + Math.sin(t * 2) * 40);
+  fill(st);
+  circle(0.75 * u, -2.85 * u, 0.3 * u + Math.sin(t * 3) * 0.08 * u);
+  circle(0.66 * u, -3.15 * u, 0.24 * u + Math.cos(t * 2.4) * 0.06 * u);
 }
 
 function drawGlyph(type, g, s) {
@@ -1180,8 +1117,8 @@ function drawRestaurant() {
     ax = width - 2.75 * u;
     hw = 2.75;
   } else if (licenseFilter === 'Roadway') {
-    ax = width - 3.25 * u;
-    hw = 3.3;
+    ax = width - 2.9 * u;
+    hw = 2.9;
   }
   const mx = mouseX;
   const my = mouseY;
@@ -1199,7 +1136,7 @@ function drawRestaurant() {
     drawingContext.shadowColor = 'rgba(90, 165, 255, 0.5)';
   }
   if (licenseFilter === 'Sidewalk') drawCafeSidewalk(t, u);
-  else if (licenseFilter === 'Roadway') drawShedRoadway(t, u);
+  else if (licenseFilter === 'Roadway') drawTruck(t, u);
   else drawBistro(t, u);
   drawingContext.shadowBlur = 0;
   drawingContext.globalAlpha = 1;
