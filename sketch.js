@@ -439,7 +439,7 @@ function buildBgLayer() {
   const maxD = Math.hypot(cx, cy);
   const edge = bgLayer.color(214, 240, 218);
   const center = bgLayer.color(250, 253, 248);
-  const flatR = maxD * 0.45;
+  const flatR = maxD * 0.58;
   const rampR = maxD - flatR;
   for (let d = maxD; d > 0; d -= 8) {
     let t = d > flatR ? Math.min(1, (d - flatR) / rampR) : 0;
@@ -482,10 +482,10 @@ function buildHeaderSpots() {
   const header = document.getElementById('page-header');
   if (!header) return;
   const defs = [
-    { fn: spotSalad, fx: 0.45, s: 62 },
-    { fn: spotCupcake, fx: 0.63, s: 78 },
-    { fn: spotWine, fx: 0.79, s: 68 },
-    { fn: spotCoffee, fx: 0.93, s: 60 },
+    { fn: spotSalad, fx: 0.52, s: 62 },
+    { fn: spotCupcake, fx: 0.67, s: 78 },
+    { fn: spotWine, fx: 0.81, s: 68 },
+    { fn: spotCoffee, fx: 0.955, s: 60 },
   ];
   for (const d of defs) {
     const sc = makePixelSprite(d.fn, d.s, 3, 0.55);
@@ -736,7 +736,7 @@ function randomizeProp(prop, startY) {
   prop.x = random(1);
   prop.y = startY;
   prop.s = s;
-  prop.alpha = map(s, 15, 40, 120, 55);
+  prop.alpha = map(s, 15, 40, 175, 95);
   prop.rot = random(-0.5, 0.5);
   prop.rotNow = prop.rot;
   prop.speed = random(0.006, 0.02);
