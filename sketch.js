@@ -886,9 +886,9 @@ function drawCafeSidewalk(t, u) {
   circle(1.88 * u, -0.95 * u, 0.09 * u);
 
   const poleC = color('#d9d0f2');
-  const tableC = color('#ead9b8');
+  const tableC = color('#ffffff');
   const chairC = color('#cabfe8');
-  for (const um of [[-1.45, 2.35, '#c9a8e8'], [0.4, 2.15, '#ead9b8']]) {
+  for (const um of [[-1.45, 2.35, '#c9a8e8'], [0.4, 2.15, '#ffffff']]) {
     const ux = um[0] * u;
     const poleTop = -um[1] * u;
     poleC.setAlpha(180);
@@ -1099,7 +1099,7 @@ function drawBistro(t, u) {
 
   const awnRed = color('#ff5d6c');
   awnRed.setAlpha(195);
-  const awnCream = color('#ead9b8');
+  const awnCream = color('#ffffff');
   awnCream.setAlpha(215);
   const stripeW = 0.72 * u;
   const startX = -2.16 * u;
