@@ -438,7 +438,7 @@ function buildBgLayer() {
   const cy = height / 2;
   const maxD = Math.hypot(cx, cy);
   const edge = bgLayer.color(214, 240, 218);
-  const center = bgLayer.color(250, 253, 248);
+  const center = bgLayer.color(255, 255, 255);
   const flatR = maxD * 0.58;
   const rampR = maxD - flatR;
   for (let d = maxD; d > 0; d -= 8) {
@@ -1057,7 +1057,7 @@ function drawRestaurant() {
   drawingContext.globalAlpha = 0.88 + 0.12 * restGlow;
   if (restGlow > 0.02) {
     drawingContext.shadowBlur = 12 * restGlow;
-    drawingContext.shadowColor = 'rgba(255, 201, 60, 0.4)';
+    drawingContext.shadowColor = 'rgba(90, 165, 255, 0.5)';
   }
   if (licenseFilter === 'Sidewalk') drawCafeSidewalk(t, u);
   else if (licenseFilter === 'Roadway') drawShedRoadway(t, u);
