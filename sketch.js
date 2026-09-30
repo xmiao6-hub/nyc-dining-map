@@ -7,7 +7,7 @@ const BOROUGH_COLORS = {
   Brooklyn: '#d95f20',
   Queens: '#5f6ce7',
   Bronx: '#0fa8a0',
-  'Staten Island': '#2d9a52',
+  'Staten Island': '#c0392b',
 };
 
 let points = [];
@@ -273,7 +273,7 @@ function draw() {
 function drawMessage(title, sub) {
   push();
   noStroke();
-  fill(88, 76, 40);
+  fill(46, 70, 54);
   textAlign(CENTER, CENTER);
   textFont('Helvetica');
   textStyle(BOLD);
@@ -282,7 +282,7 @@ function drawMessage(title, sub) {
   if (sub) {
     textStyle(NORMAL);
     textSize(12);
-    fill(163, 148, 90);
+    fill(110, 138, 120);
     text(sub, width / 2, height / 2 + 14, width - 80);
   }
   pop();
@@ -356,7 +356,7 @@ function drawRing(p) {
   strokeWeight(2);
   circle(p.x, p.y, r * 2);
   drawingContext.shadowBlur = 10;
-  drawingContext.shadowColor = 'rgba(216, 178, 40, 0.65)';
+  drawingContext.shadowColor = 'rgba(80, 160, 255, 0.75)';
   stroke(74, 58, 66, 220);
   strokeWeight(1);
   circle(p.x, p.y, r * 2 + 6);
@@ -437,8 +437,8 @@ function buildBgLayer() {
   const cx = width / 2;
   const cy = height / 2;
   const maxD = Math.hypot(cx, cy);
-  const edge = bgLayer.color(255, 235, 165);
-  const center = bgLayer.color(255, 252, 236);
+  const edge = bgLayer.color(214, 240, 218);
+  const center = bgLayer.color(247, 255, 245);
   for (let d = maxD; d > 0; d -= 8) {
     const t = 1 - d / maxD;
     bgLayer.fill(bgLayer.lerpColor(edge, center, t));
@@ -452,8 +452,10 @@ function drawCoastline() {
   if (!Array.isArray(window.NYC_BOROUGHS)) return;
   g.push();
   g.noFill();
-  g.stroke(190, 155, 55, 100);
-  g.strokeWeight(1);
+  g.stroke(70, 150, 255, 130);
+  g.strokeWeight(1.2);
+  g.drawingContext.shadowBlur = 8;
+  g.drawingContext.shadowColor = 'rgba(80, 170, 255, 0.9)';
   for (const b of window.NYC_BOROUGHS) {
     for (const ring of b.rings) {
       g.beginShape();
@@ -464,6 +466,7 @@ function drawCoastline() {
       g.endShape(g.CLOSE);
     }
   }
+  g.drawingContext.shadowBlur = 0;
   g.pop();
 }
 
@@ -592,7 +595,7 @@ function spotCoffee(g, s) {
 
 function spotWine(g, s) {
   g.noStroke();
-  let c = g.color('#8a7440');
+  let c = g.color('#5a7a62');
   c.setAlpha(30);
   g.fill(c);
   g.ellipse(-s * 0.5, s * 0.78, s * 0.85, s * 0.12);
@@ -628,7 +631,7 @@ function spotWine(g, s) {
 
 function spotCupcake(g, s) {
   g.noStroke();
-  let c = g.color('#8a7440');
+  let c = g.color('#5a7a62');
   c.setAlpha(30);
   g.fill(c);
   g.ellipse(0, s * 0.68, s * 1.05, s * 0.12);
@@ -792,11 +795,11 @@ function drawCafeSidewalk(t, u) {
   fill(pave);
   rect(-2.6 * u, -0.22 * u, 5.2 * u, 0.22 * u, 0.05 * u);
 
-  const wall = color('#f7e8bd');
+  const wall = color('#e6f4dc');
   wall.setAlpha(165);
   fill(wall);
   rect(-2.3 * u, -2.7 * u, 4.6 * u, 2.48 * u, 0.1 * u);
-  const trim = color('#c9a35a');
+  const trim = color('#8fbf8e');
   noFill();
   trim.setAlpha(150);
   stroke(trim);
@@ -875,7 +878,7 @@ function drawShedRoadway(t, u) {
   fill(inside);
   rect(-2.25 * u, -1.62 * u, 4.5 * u, 1.38 * u, 0.06 * u);
 
-  const wall = color('#f7e8bd');
+  const wall = color('#e6f4dc');
   wall.setAlpha(165);
   fill(wall);
   rect(-2.25 * u, -1.62 * u, 4.5 * u, 1.38 * u, 0.06 * u);
@@ -1021,19 +1024,19 @@ function drawBistro(t, u) {
   u *= 0.8;
   noStroke();
 
-  const wall = color('#f7e8bd');
+  const wall = color('#e6f4dc');
   wall.setAlpha(45);
   fill(wall);
   rect(-2.3 * u, -3.4 * u, 4.6 * u, 3.4 * u, 0.12 * u);
 
-  const trim = color('#c9a35a');
+  const trim = color('#8fbf8e');
   noFill();
   trim.setAlpha(150);
   stroke(trim);
   strokeWeight(0.045 * u);
   rect(-2.3 * u, -3.4 * u, 4.6 * u, 3.4 * u, 0.12 * u);
   noStroke();
-  const cornice = color('#c9a35a');
+  const cornice = color('#8fbf8e');
   cornice.setAlpha(160);
   fill(cornice);
   rect(-2.55 * u, -3.78 * u, 5.1 * u, 0.42 * u, 0.08 * u);
@@ -1085,7 +1088,7 @@ function drawBistro(t, u) {
   door.setAlpha(165);
   fill(door);
   rect(-0.4 * u, -0.9 * u, 0.8 * u, 0.9 * u, 0.12 * u);
-  const doorFrame = color('#c9a35a');
+  const doorFrame = color('#8fbf8e');
   doorFrame.setAlpha(175);
   noFill();
   stroke(doorFrame);

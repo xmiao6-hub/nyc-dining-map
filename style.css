@@ -1,9 +1,9 @@
 ot {
-  --bg: #fffaea;
+  --bg: #f2fbf4;
   --panel: #ffffff;
-  --line: #eddfae;
-  --text: #4a4232;
-  --muted: #a3946e;
+  --line: #c2e3c4;
+  --text: #2e4636;
+  --muted: #6e8a78;
 }
 
 * {
@@ -14,7 +14,7 @@ ot {
 
 body {
   min-height: 100vh;
-  background: linear-gradient(160deg, #fffdf2 0%, #fff6d8 55%, #ffedb0 100%);
+  background: linear-gradient(160deg, #f4fdf6 0%, #e2f6e4 55%, #cff0d4 100%);
   color: var(--text);
   font-family: "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
   display: flex;
@@ -85,8 +85,8 @@ header h1 {
 }
 
 .chip:hover {
-  border-color: #e8c94f;
-  box-shadow: 0 2px 10px rgba(200, 160, 50, 0.2);
+  border-color: #4aa3ff;
+  box-shadow: 0 2px 10px rgba(80, 160, 255, 0.25);
 }
 
 .chip .count {
@@ -99,7 +99,7 @@ header h1 {
 }
 
 .chip.off .dot {
-  background: #d0c496 !important;
+  background: #b8ccd4 !important;
 }
 
 .dot {
@@ -150,9 +150,9 @@ header h1 {
 }
 
 .filters button.active {
-  background: #fff3c4;
-  border-color: #d9b83a;
-  color: #6e5a14;
+  background: #e3f2ff;
+  border-color: #4aa3ff;
+  color: #14507e;
 }
 
 #canvas-wrap {
@@ -163,7 +163,7 @@ header h1 {
   display: block;
   border-radius: 14px;
   border: 1px solid #ffffff;
-  box-shadow: 0 16px 44px rgba(190, 155, 50, 0.3);
+  box-shadow: 0 16px 44px rgba(80, 150, 230, 0.3);
 }
 
 #tooltip {
@@ -171,7 +171,7 @@ header h1 {
   z-index: 5;
   pointer-events: none;
   background: rgba(255, 255, 255, 0.96);
-  border: 1px solid #e5d28e;
+  border: 1px solid #a8d4ff;
   border-radius: 10px;
   padding: 9px 12px;
   font-size: 12.5px;
@@ -181,10 +181,10 @@ header h1 {
 
 @keyframes tooltipGlow {
   0%, 100% {
-    box-shadow: 0 0 14px rgba(230, 190, 70, 0.4), 0 0 34px rgba(220, 180, 60, 0.22), 0 10px 28px rgba(150, 120, 30, 0.2);
+    box-shadow: 0 0 14px rgba(90, 170, 255, 0.45), 0 0 34px rgba(80, 160, 255, 0.25), 0 10px 28px rgba(30, 90, 150, 0.2);
   }
   50% {
-    box-shadow: 0 0 22px rgba(235, 195, 70, 0.55), 0 0 52px rgba(225, 185, 55, 0.32), 0 10px 28px rgba(150, 120, 30, 0.2);
+    box-shadow: 0 0 22px rgba(100, 175, 255, 0.6), 0 0 52px rgba(80, 160, 255, 0.35), 0 10px 28px rgba(30, 90, 150, 0.2);
   }
 }
 
@@ -197,7 +197,7 @@ header h1 {
   display: block;
   font-size: 13px;
   margin-bottom: 2px;
-  color: #4a4232;
+  color: #2e4636;
 }
 
 #tooltip .street {
@@ -212,7 +212,7 @@ header h1 {
   align-items: center;
   gap: 6px;
   font-size: 11.5px;
-  color: #7a6c4a;
+  color: #51705e;
 }
 
 #tooltip .meta i {
@@ -233,7 +233,7 @@ footer {
 }
 
 footer .hint {
-  color: #b8a56e;
+  color: #7fa3b8;
 }
 
 footer .source {
