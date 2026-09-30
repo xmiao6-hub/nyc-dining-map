@@ -440,7 +440,7 @@ function buildBgLayer() {
   const cy = height / 2;
   const flat = 0.86;
   const ramp = 1 - flat;
-  const Land = [214, 240, 218];
+  const Land = [230, 246, 234];
   for (let y = 0; y < height; y++) {
     const ny = Math.abs(y - cy) / cy;
     for (let x = 0; x < width; x++) {
@@ -491,11 +491,9 @@ function buildHeaderSpots() {
   const header = document.getElementById('page-header');
   if (!header) return;
   const defs = [
-    { fn: spotSalad, fx: 0.36, s: 62 },
     { fn: spotCoffee, fx: 0.52, s: 60 },
     { fn: spotCupcake, fx: 0.68, s: 78 },
     { fn: spotWine, fx: 0.83, s: 68 },
-    { fn: spotSalad, fx: 0.96, s: 62 },
   ];
   for (const d of defs) {
     const sc = makePixelSprite(d.fn, d.s, 3, 0.55);
@@ -513,8 +511,9 @@ function buildEdgeSpots() {
   for (const sc of edgeSpots) sc.remove();
   edgeSpots = [];
   const defs = [
-    { fn: glyphPizza, s: 70, style: { left: '6px', top: '30%', transform: 'translate(0, -50%) rotate(-10deg)' } },
-    { fn: glyphFries, s: 66, style: { left: '6px', top: '70%', transform: 'translate(0, -50%) rotate(-5deg)' } },
+    { fn: glyphPizza, s: 70, style: { left: '6px', top: '28%', transform: 'translate(0, -50%) rotate(-10deg)' } },
+    { fn: spotSalad, s: 58, style: { left: '8px', top: '49%', transform: 'translate(0, -50%) rotate(4deg)' } },
+    { fn: glyphFries, s: 66, style: { left: '6px', top: '71%', transform: 'translate(0, -50%) rotate(-5deg)' } },
     { fn: glyphBurger, s: 70, style: { right: '6px', top: '26%', transform: 'translate(0, -50%) rotate(8deg)' } },
     { fn: glyphIceCream, s: 68, style: { right: '6px', top: '68%', transform: 'translate(0, -50%) rotate(6deg)' } },
   ];
@@ -1100,7 +1099,7 @@ function drawBistro(t, u) {
 
   const awnRed = color('#ff5d6c');
   awnRed.setAlpha(195);
-  const awnCream = color('#fffef8');
+  const awnCream = color('#ead9b8');
   awnCream.setAlpha(215);
   const stripeW = 0.72 * u;
   const startX = -2.16 * u;
