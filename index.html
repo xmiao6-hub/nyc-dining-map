@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NYC Outdoor Dining Map &mdash; p5.js</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="p5.min.js"></script>
+  <script>window.p5 || document.write('<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"><\/script>')</script>
+</head>
+<body>
+  <main class="panel">
+    <header>
+      <h1>NYC Outdoor Dining</h1>
+      <p class="subtitle">Licensed Dining Out NYC locations, plotted at their real latitude / longitude</p>
+    </header>
+
+    <section class="controls">
+      <div id="borough-chips" class="chips" aria-label="Toggle boroughs"></div>
+      <div class="shape-key">
+        <span class="key-item"><span class="dot shape-circle"></span>Sidewalk caf&eacute;</span>
+        <span class="key-item"><span class="dot shape-square"></span>Roadway dining</span>
+      </div>
+      <div class="filters" id="license-filters">
+        <button data-filter="ALL" class="active">All</button>
+        <button data-filter="Sidewalk">Sidewalk</button>
+        <button data-filter="Roadway">Roadway</button>
+      </div>
+    </section>
+
+    <div id="canvas-wrap">
+      <div id="tooltip" class="hidden"></div>
+    </div>
+
+    <footer>
+      <span><span id="stat-visible">&ndash;</span> of <span id="stat-total">&ndash;</span> locations shown</span>
+      <span class="hint">Hover a point for details &middot; click chips to toggle boroughs</span>
+      <span class="source" id="source-note"></span>
+    </footer>
+  </main>
+
+  <script src="geo.js"></script>
+  <script src="data.js"></script>
+  <script src="sketch.js"></script>
+</body>
+</html>
