@@ -264,6 +264,7 @@ function redrawLayer() {
 }
 
 function draw() {
+  updateSpriteFX();
   image(bgLayer, 0, 0);
   drawRestaurant();
   drawProps();
@@ -503,46 +504,114 @@ let headerSpots = [];
 let edgeSpots = [];
 
 function buildHeaderSpots() {
-  for (const sc of headerSpots) sc.remove();
+  for (const s of headerSpots) s.cv.remove();
   headerSpots = [];
   const header = document.getElementById('page-header');
   if (!header) return;
   const defs = [
-    { fn: spotCoffee, fx: 0.52, s: 60 },
-    { fn: spotCupcake, fx: 0.68, s: 78 },
-    { fn: spotWine, fx: 0.83, s: 68 },
+    { fn: spotCoffee, fx: 0.52, s: 60, bt: 'translate(-50%, -50%)', kind: 'coffee' },
+    { fn: spotCupcake, fx: 0.68, s: 78, bt: 'translate(-50%, -50%)', kind: 'food' },
+    { fn: spotWine, fx: 0.83, s: 68, bt: 'translate(-50%, -50%)', kind: 'food' },
   ];
   for (const d of defs) {
-    const sc = makePixelSprite(d.fn, d.s, 3, 0.55);
-    sc.parent(header);
-    sc.style('position', 'absolute');
-    sc.style('left', Math.round(d.fx * 100) + '%');
-    sc.style('top', '50%');
-    sc.style('transform', 'translate(-50%, -50%)');
-    sc.style('display', 'block');
-    headerSpots.push(sc);
+    const cv = makePixelSprite(d.fn, d.s, 3, 0.55);
+    cv.parent(header);
+    cv.style('position', 'absolute');
+    cv.style('left', Math.round(d.fx * 100) + '%');
+    cv.style('top', '50%');
+    cv.style('transform', d.bt);
+    cv.style('display', 'block');
+    headerSpots.push({ cv, bt: d.bt, kind: d.kind });
   }
 }
 
 function buildEdgeSpots() {
-  for (const sc of edgeSpots) sc.remove();
+  for (const s of edgeSpots) s.cv.remove();
   edgeSpots = [];
   const defs = [
-    { fn: glyphPizza, s: 70, style: { left: '8px', top: '28%', transform: 'translate(0, -50%) rotate(-10deg)' } },
-    { fn: spotSalad, s: 58, style: { left: '64px', top: '49%', transform: 'translate(0, -50%) rotate(4deg)' } },
-    { fn: glyphFries, s: 66, style: { left: '0px', top: '71%', transform: 'translate(0, -50%) rotate(-5deg)' } },
-    { fn: glyphBurger, s: 70, style: { right: '4px', top: '26%', transform: 'translate(0, -50%) rotate(8deg)' } },
-    { fn: glyphIceCream, s: 68, style: { right: '58px', top: '68%', transform: 'translate(0, -50%) rotate(6deg)' } },
+    { fn: glyphPizza, s: 70, left: '8px', top: '28%', bt: 'translate(0, -50%) rotate(-10deg)', kind: 'food' },
+    { fn: spotSalad, s: 58, left: '64px', top: '49%', bt: 'translate(0, -50%) rotate(4deg)', kind: 'food' },
+    { fn: glyphFries, s: 66, left: '0px', top: '71%', bt: 'translate(0, -50%) rotate(-5deg)', kind: 'food' },
+    { fn: glyphBurger, s: 70, right: '4px', top: '26%', bt: 'translate(0, -50%) rotate(8deg)', kind: 'food' },
+    { fn: glyphIceCream, s: 68, right: '58px', top: '68%', bt: 'translate(0, -50%) rotate(6deg)', kind: 'food' },
   ];
   for (const d of defs) {
-    const sc = makePixelSprite(d.fn, d.s, 3, 0.55);
-    sc.style('position', 'fixed');
-    sc.style('z-index', '2');
-    sc.style('display', 'block');
-    sc.style('pointer-events', 'none');
-    for (const k in d.style) sc.style(k, d.style[k]);
-    sc.parent(document.body);
-    edgeSpots.push(sc);
+    const cv = makePixelSprite(d.fn, d.s, 3, 0.5);
+    cv.style('position', 'fixed');
+    cv.style('z-index', '2');
+    cv.style('display', 'block');
+    cv.style('pointer-events', 'none');
+    cv.style('left', d.left);
+    cv.style('top', d.top);
+    if (d.right) cv.style('right', d.right);
+    cv.style('transform', d.bt);
+    cv.parent(document.body);
+    edgeSpots.push({ cv, bt: d.bt, kind: d.kind });
+  }
+  spotSprites = [...headerSpots, ...edgeSpots];
+  buildScentOverlay();
+}
+
+function buildScentOverlay() {
+  if (scentOverlay) scentOverlay.remove();
+  scentOverlay = createGraphics(window.innerWidth, window.innerHeight);
+  scentOverlay.parent(document.body);
+  scentOverlay.style('position', 'fixed');
+  scentOverlay.style('left', '0');
+  scentOverlay.style('top', '0');
+  scentOverlay.style('z-index', '3');
+  scentOverlay.style('pointer-events', 'none');
+  scentOverlay.style('display', 'block');
+  window.addEventListener('mousemove', (e) => {
+    pageMX = e.clientX;
+    pageMY = e.clientY;
+  });
+}
+
+function updateSpriteFX() {
+  const t = millis() / 1000;
+  for (const sp of spotSprites) {
+    const r = sp.cv.getBoundingClientRect();
+    const hovered = pageMX >= r.left && pageMX <= r.right && pageMY >= r.top && pageMY <= r.bottom;
+    if (hovered) {
+      const jx = (Math.random() - 0.5) * 5;
+      const jy = (Math.random() - 0.5) * 5;
+      sp.cv.style.transform = sp.bt + ' translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px)';
+      if (Math.random() < 0.3) {
+        scents.push({
+          x: r.left + Math.random() * r.width,
+          y: r.top + r.height * (0.1 + Math.random() * 0.3),
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: -(0.5 + Math.random() * 0.7),
+          life: 0,
+          max: 70 + Math.random() * 50,
+          size: (sp.kind === 'coffee' ? 11 : 6) + Math.random() * 6,
+          col: sp.kind === 'coffee' ? '#f7f3ea' : (Math.random() < 0.5 ? '#ffd9ec' : '#dcc8f0'),
+          ph: Math.random() * TWO_PI,
+        });
+      }
+    } else if (sp.shaken) {
+      sp.cv.style.transform = sp.bt;
+    }
+    sp.shaken = hovered;
+  }
+  if (!scentOverlay) return;
+  scentOverlay.clear();
+  scentOverlay.noStroke();
+  for (let i = scents.length - 1; i >= 0; i--) {
+    const p = scents[i];
+    p.life++;
+    p.x += p.vx + Math.sin(t * 2 + p.ph + p.life * 0.04) * 0.5;
+    p.y += p.vy;
+    if (p.life > p.max || p.y < -20) {
+      scents.splice(i, 1);
+      continue;
+    }
+    const a = 255 * (1 - p.life / p.max) * 0.75;
+    const c = scentOverlay.color(p.col);
+    c.setAlpha(a);
+    scentOverlay.fill(c);
+    scentOverlay.circle(p.x, p.y, p.size * (1 + (p.life / p.max) * 0.8));
   }
 }
 
@@ -881,7 +950,7 @@ function drawCafeSidewalk(t, u) {
   noStroke();
 
   const glass = color('#ffc93c');
-  glass.setAlpha(Math.min(255, Math.round(230 + Math.sin(t * 0.8) * 25)));
+  glass.setAlpha(Math.min(255, Math.round(120 + Math.sin(t * 0.8) * 25)));
   fill(glass);
   rect(-1.9 * u, -2.15 * u, 2.9 * u, 1.35 * u, 0.08 * u);
   noStroke();
@@ -1350,6 +1419,7 @@ function windowResized() {
   buildBgLayer();
   buildHeaderSpots();
   buildEdgeSpots();
+  if (scentOverlay) scentOverlay.resizeCanvas(window.innerWidth, window.innerHeight);
   initProps();
   if (!ready) return;
   const wrap = document.getElementById('canvas-wrap');
