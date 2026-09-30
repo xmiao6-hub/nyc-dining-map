@@ -520,6 +520,7 @@ function buildHeaderSpots() {
   ];
   for (const d of defs) {
     const cv = makePixelSprite(d.fn, d.s, 3, 0.55);
+    cv.style('display', 'block');
     const wrap = document.createElement('div');
     wrap.className = 'spot-wrap';
     wrap.style.position = 'absolute';
@@ -545,6 +546,7 @@ function buildEdgeSpots() {
   ];
   for (const d of defs) {
     const cv = makePixelSprite(d.fn, d.s, 3, 0.5);
+    cv.style('display', 'block');
     const wrap = document.createElement('div');
     wrap.className = 'spot-wrap edge';
     wrap.style.position = 'fixed';
