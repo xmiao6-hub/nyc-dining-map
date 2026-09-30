@@ -44,6 +44,7 @@ function setup() {
       computeBounds();
       layoutMap();
       projectPoints();
+      buildBgLayer();
       for (const b of boroughList()) visibleBoroughs[b] = true;
       buildChips();
       wireFilters();
@@ -441,7 +442,28 @@ function buildBgLayer() {
     bgLayer.fill(bgLayer.lerpColor(edge, center, t));
     bgLayer.circle(cx, cy, d * 2);
   }
+  if (mapRect) drawCoastline();
   decorateBgLayer();
+}
+
+function drawCoastline() {
+  const g = bgLayer;
+  if (!Array.isArray(window.NYC_BOROUGHS)) return;
+  g.push();
+  g.noFill();
+  g.stroke(130, 175, 225, 60);
+  g.strokeWeight(1);
+  for (const b of window.NYC_BOROUGHS) {
+    for (const ring of b.rings) {
+      g.beginShape();
+      for (const pt of ring) {
+        const v = lonLatToXY(pt[0], pt[1]);
+        g.vertex(v.x, v.y);
+      }
+      g.endShape(g.CLOSE);
+    }
+  }
+  g.pop();
 }
 
 function decorateBgLayer() {
@@ -464,17 +486,36 @@ function drawSpotSmooth(g, fn, x, y, s, alpha) {
 function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
   const half = Math.ceil((s * 1.25) / pix);
   const off = createGraphics(half * 2, half * 2);
+  off.pixelDensity(1);
   off.noStroke();
   off.push();
   off.translate(half, half);
   off.scale(1 / pix);
   fn(off, s);
   off.pop();
-  g.noSmooth();
+  off.loadPixels();
+  g.noStroke();
   g.drawingContext.globalAlpha = alpha;
-  g.image(off, x - half * pix, y - half * pix, half * 2 * pix, half * 2 * pix);
+  for (let j = 0; j < half * 2; j++) {
+    for (let i = 0; i < half * 2; i++) {
+      const k = 4 * (j * half * 2 + i);
+      if (off.pixels[k + 3] < 40) continue;
+      const r = Math.min(255, Math.round(off.pixels[k] / 32) * 32);
+      const gr = Math.min(255, Math.round(off.pixels[k + 1] / 32) * 32);
+      const b = Math.min(255, Math.round(off.pixels[k + 2] / 32) * 32);
+      g.fill(r, gr, b);
+      g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix, pix);
+    }
+  }
+  g.drawingContext.globalAlpha = alpha * 0.22;
+  g.fill(255);
+  for (let j = 0; j < half * 2; j++) {
+    for (let i = 0; i < half * 2; i++) {
+      if ((i + j) % 2 === 0) continue;
+      g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix, pix);
+    }
+  }
   g.drawingContext.globalAlpha = 1;
-  g.smooth();
   off.remove();
 }
 
