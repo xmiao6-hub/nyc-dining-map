@@ -4,7 +4,7 @@ const MAP_MARGIN = 38;
 
 const BOROUGH_COLORS = {
   Manhattan: '#45c8ff',
-  Brooklyn: '#ffa0c0',
+  Brooklyn: '#4caf50',
   Queens: '#9c36b5',
   Bronx: '#0fa8a0',
   'Staten Island': '#c0392b',
@@ -434,18 +434,17 @@ function setStatus(msg) {
 function buildBgLayer() {
   bgLayer = createGraphics(width, height);
   bgLayer.noStroke();
-  const cx = width / 2;
-  const cy = height / 2;
-  const maxD = Math.hypot(cx, cy);
-  const edge = bgLayer.color(214, 240, 218);
-  const center = bgLayer.color(255, 255, 255);
-  const flatR = maxD * 0.58;
-  const rampR = maxD - flatR;
-  for (let d = maxD; d > 0; d -= 8) {
-    let t = d > flatR ? Math.min(1, (d - flatR) / rampR) : 0;
+  const mid = height / 2;
+  const white = bgLayer.color(255, 255, 255);
+  const light = bgLayer.color(214, 240, 218);
+  const flat = mid * 0.6;
+  const ramp = mid * 0.34;
+  for (let y = 0; y < height; y += 2) {
+    const dist = Math.abs(y - mid);
+    let t = Math.min(1, Math.max(0, (dist - flat) / ramp));
     const e = t * t * (3 - 2 * t);
-    bgLayer.fill(bgLayer.lerpColor(center, edge, e));
-    bgLayer.circle(cx, cy, d * 2);
+    bgLayer.fill(bgLayer.lerpColor(white, light, e));
+    bgLayer.rect(0, y, width, 2);
   }
   if (mapRect) drawCoastline();
 }
@@ -482,10 +481,10 @@ function buildHeaderSpots() {
   const header = document.getElementById('page-header');
   if (!header) return;
   const defs = [
-    { fn: spotSalad, fx: 0.52, s: 62 },
-    { fn: spotCupcake, fx: 0.67, s: 78 },
-    { fn: spotWine, fx: 0.81, s: 68 },
-    { fn: spotCoffee, fx: 0.955, s: 60 },
+    { fn: spotCoffee, fx: 0.52, s: 60 },
+    { fn: spotCupcake, fx: 0.68, s: 78 },
+    { fn: spotWine, fx: 0.83, s: 68 },
+    { fn: spotSalad, fx: 0.96, s: 62 },
   ];
   for (const d of defs) {
     const sc = makePixelSprite(d.fn, d.s, 3, 0.55);
