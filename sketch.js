@@ -578,10 +578,14 @@ function updateSpriteFX() {
   for (const sp of spotSprites) {
     const r = sp.cv.elt.getBoundingClientRect();
     const hovered = pageMX >= r.left && pageMX <= r.right && pageMY >= r.top && pageMY <= r.bottom;
-    if (hovered) {
-      const jx = (Math.random() - 0.5) * 5;
-      const jy = (Math.random() - 0.5) * 5;
-      sp.cv.style.transform = sp.bt + ' translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px)';
+    sp.energy = sp.energy || 0;
+    if (hovered) sp.energy = 1;
+    else sp.energy *= 0.86;
+    if (sp.energy > 0.02) {
+      const jx = (Math.random() - 0.5) * 9 * sp.energy;
+      const jy = (Math.random() - 0.5) * 9 * sp.energy;
+      const jr = (Math.random() - 0.5) * 5 * sp.energy;
+      sp.cv.style.transform = sp.bt + ' translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px) rotate(' + jr.toFixed(1) + 'deg)';
       if (Math.random() < 0.3) {
         scents.push({
           x: r.left + Math.random() * r.width,
@@ -595,10 +599,9 @@ function updateSpriteFX() {
           ph: Math.random() * TWO_PI,
         });
       }
-    } else if (sp.shaken) {
+    } else {
       sp.cv.style.transform = sp.bt;
     }
-    sp.shaken = hovered;
   }
   if (!scentOverlay) return;
   scentOverlay.clear();
