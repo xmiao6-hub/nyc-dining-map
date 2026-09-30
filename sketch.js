@@ -31,6 +31,7 @@ function setup() {
   const w = Math.max(320, wrap.clientWidth);
   const h = Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
   createCanvas(w, h).parent(wrap);
+  buildHeaderSpots();
   tooltip = document.getElementById('tooltip');
   sourceNote = document.getElementById('source-note');
   tooltip.classList.add('hidden');
@@ -443,7 +444,6 @@ function buildBgLayer() {
     bgLayer.circle(cx, cy, d * 2);
   }
   if (mapRect) drawCoastline();
-  decorateBgLayer();
 }
 
 function drawCoastline() {
@@ -466,16 +466,32 @@ function drawCoastline() {
   g.pop();
 }
 
-function decorateBgLayer() {
-  const g = bgLayer;
-  const u = Math.min(width, height) / 10;
-  drawSpotPixel(g, spotCoffee, width * 0.945, height * 0.16, u * 0.9, 0.7, 5);
-  drawSpotPixel(g, spotWine, width * 0.075, height * 0.5, u * 0.95, 0.7, 5);
-  drawSpotPixel(g, spotCupcake, width * 0.065, height * 0.09, u * 1.2, 0.7, 5);
+let headerSpots = [];
+
+function buildHeaderSpots() {
+  for (const sc of headerSpots) sc.remove();
+  headerSpots = [];
+  const header = document.getElementById('page-header');
+  if (!header) return;
+  const defs = [
+    { fn: spotCupcake, fx: 0.62, s: 78 },
+    { fn: spotWine, fx: 0.78, s: 68 },
+    { fn: spotCoffee, fx: 0.93, s: 60 },
+  ];
+  for (const d of defs) {
+    const sc = makePixelSprite(d.fn, d.s, 3, 0.55);
+    sc.parent(header);
+    sc.style('position', 'absolute');
+    sc.style('left', Math.round(d.fx * 100) + '%');
+    sc.style('top', '50%');
+    sc.style('transform', 'translate(-50%, -50%)');
+    sc.style('display', 'block');
+    headerSpots.push(sc);
+  }
 }
 
-function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
-  const half = Math.ceil((s * 1.75) / pix);
+function makePixelSprite(fn, s, pix, alpha) {
+  const half = Math.ceil((s * 1.4) / pix);
   const off = createGraphics(half * 2, half * 2);
   off.pixelDensity(1);
   off.noStroke();
@@ -485,10 +501,10 @@ function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
   fn(off, s);
   off.pop();
   off.loadPixels();
-  g.noStroke();
-  const bx = Math.round(x - half * pix);
-  const by = Math.round(y - half * pix);
-  g.drawingContext.globalAlpha = alpha;
+  const out = createGraphics(half * 2 * pix, half * 2 * pix);
+  out.pixelDensity(1);
+  out.noStroke();
+  out.drawingContext.globalAlpha = alpha;
   for (let j = 0; j < half * 2; j++) {
     for (let i = 0; i < half * 2; i++) {
       const k = 4 * (j * half * 2 + i);
@@ -503,14 +519,14 @@ function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
         gr = Math.min(255, Math.round(gr * f));
         b = Math.min(255, Math.round(b * f));
       }
-      g.fill(r, gr, b);
-      g.rect(bx + i * pix, by + j * pix, pix, pix);
+      out.fill(r, gr, b);
+      out.rect(i * pix, j * pix, pix, pix);
     }
   }
-  g.drawingContext.globalAlpha = 1;
+  out.drawingContext.globalAlpha = 1;
   off.remove();
+  return out;
 }
-
 
 function spotCoffee(g, s) {
   g.noStroke();
@@ -1232,6 +1248,7 @@ function escapeHtml(s) {
 
 function windowResized() {
   buildBgLayer();
+  buildHeaderSpots();
   initProps();
   if (!ready) return;
   const wrap = document.getElementById('canvas-wrap');

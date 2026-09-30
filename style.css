@@ -27,6 +27,23 @@ body {
   width: min(1080px, 100%);
 }
 
+header {
+  position: relative;
+}
+
+header h1,
+header .subtitle {
+  position: relative;
+  z-index: 2;
+}
+
+#page-header canvas {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
 header h1 {
   font-size: 26px;
   letter-spacing: 0.3px;
