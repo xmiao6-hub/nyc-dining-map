@@ -865,13 +865,11 @@ function drawCafeSidewalk(t, u) {
 
   const glass = color('#ffc93c');
   glass.setAlpha(Math.min(255, Math.round(165 + Math.sin(t * 0.8) * 25)));
-  for (const pane of [-1.9, -0.92, 0.06]) {
-    fill(glass);
-    rect(pane * u, -2.15 * u, 0.86 * u, 1.35 * u, 0.06 * u);
-  }
+  fill(glass);
+  rect(-1.9 * u, -2.15 * u, 2.9 * u, 1.35 * u, 0.08 * u);
   noStroke();
   const shine = color('#ffffff');
-  shine.setAlpha(85);
+  shine.setAlpha(200);
   fill(shine);
   quad(-1.78 * u, -0.92 * u, -1.64 * u, -0.92 * u, -1.28 * u, -2.03 * u, -1.42 * u, -2.03 * u);
   quad(-1.52 * u, -0.92 * u, -1.46 * u, -0.92 * u, -1.1 * u, -2.03 * u, -1.16 * u, -2.03 * u);
