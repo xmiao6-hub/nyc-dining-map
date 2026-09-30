@@ -3,8 +3,8 @@ const NYC_LIMITS = { latMin: 40.45, latMax: 40.95, lonMin: -74.3, lonMax: -73.68
 const MAP_MARGIN = 38;
 
 const BOROUGH_COLORS = {
-  Manhattan: '#1c4ed8',
-  Brooklyn: '#d95f20',
+  Manhattan: '#45c8ff',
+  Brooklyn: '#e8a80c',
   Queens: '#9c36b5',
   Bronx: '#0fa8a0',
   'Staten Island': '#c0392b',
@@ -439,9 +439,12 @@ function buildBgLayer() {
   const maxD = Math.hypot(cx, cy);
   const edge = bgLayer.color(214, 240, 218);
   const center = bgLayer.color(250, 253, 248);
+  const flatR = maxD * 0.45;
+  const rampR = maxD - flatR;
   for (let d = maxD; d > 0; d -= 8) {
-    const t = 1 - d / maxD;
-    bgLayer.fill(bgLayer.lerpColor(edge, center, t));
+    let t = d > flatR ? Math.min(1, (d - flatR) / rampR) : 0;
+    const e = t * t * (3 - 2 * t);
+    bgLayer.fill(bgLayer.lerpColor(center, edge, e));
     bgLayer.circle(cx, cy, d * 2);
   }
   if (mapRect) drawCoastline();
@@ -479,8 +482,9 @@ function buildHeaderSpots() {
   const header = document.getElementById('page-header');
   if (!header) return;
   const defs = [
-    { fn: spotCupcake, fx: 0.62, s: 78 },
-    { fn: spotWine, fx: 0.78, s: 68 },
+    { fn: spotSalad, fx: 0.45, s: 62 },
+    { fn: spotCupcake, fx: 0.63, s: 78 },
+    { fn: spotWine, fx: 0.79, s: 68 },
     { fn: spotCoffee, fx: 0.93, s: 60 },
   ];
   for (const d of defs) {
@@ -552,6 +556,49 @@ function makePixelSprite(fn, s, pix, alpha) {
   out.drawingContext.globalAlpha = 1;
   off.remove();
   return out;
+}
+
+function spotSalad(g, s) {
+  g.noStroke();
+  let c = g.color('#5a7a62');
+  c.setAlpha(30);
+  g.fill(c);
+  g.ellipse(0, s * 0.55, s * 0.9, s * 0.1);
+  c = g.color('#7ddf9a');
+  c.setAlpha(215);
+  g.fill(c);
+  g.circle(-s * 0.26, -s * 0.34, s * 0.36);
+  g.circle(s * 0.26, -s * 0.34, s * 0.36);
+  g.circle(0, -s * 0.42, s * 0.4);
+  c = g.color('#a8e6b8');
+  c.setAlpha(215);
+  g.fill(c);
+  g.circle(-s * 0.14, -s * 0.5, s * 0.3);
+  g.circle(s * 0.16, -s * 0.52, s * 0.26);
+  c = g.color('#ff5d6c');
+  c.setAlpha(225);
+  g.fill(c);
+  g.circle(s * 0.02, -s * 0.62, s * 0.18);
+  c = g.color('#d9f2c8');
+  c.setAlpha(220);
+  g.fill(c);
+  g.circle(-s * 0.3, -s * 0.58, s * 0.16);
+  g.stroke('#7ddf9a');
+  g.strokeWeight(s * 0.03);
+  g.line(-s * 0.34, -s * 0.6, -s * 0.26, -s * 0.56);
+  g.noStroke();
+  c = g.color('#fffef8');
+  c.setAlpha(235);
+  g.fill(c);
+  g.arc(0, -s * 0.05, s * 1.1, s * 0.95, 0, PI);
+  c = g.color('#d9a3b3');
+  c.setAlpha(150);
+  g.fill(c);
+  g.arc(0, -s * 0.05, s * 1.1, s * 0.95, 0.12, PI - 0.12);
+  c = g.color('#fffef8');
+  c.setAlpha(235);
+  g.fill(c);
+  g.ellipse(0, s * 0.46, s * 0.5, s * 0.09);
 }
 
 function spotCoffee(g, s) {
@@ -674,7 +721,7 @@ const PROP_TONES = ['#ff8a5c', '#f0a500', '#2ec4b6', '#f26d9a'];
 
 function initProps() {
   props = [];
-  const n = Math.max(14, Math.round((width * height) / 48000));
+  const n = Math.max(20, Math.round((width * height) / 30000));
   for (let i = 0; i < n; i++) {
     const prop = {};
     randomizeProp(prop, random(1));
@@ -689,7 +736,7 @@ function randomizeProp(prop, startY) {
   prop.x = random(1);
   prop.y = startY;
   prop.s = s;
-  prop.alpha = map(s, 15, 40, 165, 85);
+  prop.alpha = map(s, 15, 40, 120, 55);
   prop.rot = random(-0.5, 0.5);
   prop.rotNow = prop.rot;
   prop.speed = random(0.006, 0.02);
