@@ -491,9 +491,16 @@ function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
     for (let i = 0; i < half * 2; i++) {
       const k = 4 * (j * half * 2 + i);
       if (off.pixels[k + 3] < 40) continue;
-      const r = Math.min(255, Math.round(off.pixels[k] / 32) * 32);
-      const gr = Math.min(255, Math.round(off.pixels[k + 1] / 32) * 32);
-      const b = Math.min(255, Math.round(off.pixels[k + 2] / 32) * 32);
+      let r = Math.min(255, Math.round(off.pixels[k] / 32) * 32);
+      let gr = Math.min(255, Math.round(off.pixels[k + 1] / 32) * 32);
+      let b = Math.min(255, Math.round(off.pixels[k + 2] / 32) * 32);
+      const lum = 0.3 * r + 0.6 * gr + 0.1 * b;
+      if (lum > 0 && lum < 55) {
+        const f = 55 / lum;
+        r = Math.min(255, Math.round(r * f));
+        gr = Math.min(255, Math.round(gr * f));
+        b = Math.min(255, Math.round(b * f));
+      }
       g.fill(r, gr, b);
       g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix, pix);
     }
@@ -510,7 +517,7 @@ function spotCoffee(g, s) {
   g.fill(c);
   g.ellipse(0, s * 0.55, s * 1.5, s * 0.18);
   g.rect(-s * 0.45, -s * 0.25, s * 0.9, s * 0.8, s * 0.2);
-  c = g.color('#8a5a3b');
+  c = g.color('#a9714c');
   c.setAlpha(160);
   g.fill(c);
   g.ellipse(0, -s * 0.21, s * 0.74, s * 0.13);
@@ -528,7 +535,7 @@ function spotCoffee(g, s) {
   g.arc(s * 0.14, -s * 0.82, s * 0.24, s * 0.32, PI, TWO_PI);
   g.arc(-s * 0.02, -s * 1.0, s * 0.2, s * 0.28, PI, TWO_PI);
   g.noStroke();
-  c = g.color('#8a5a3b');
+  c = g.color('#a9714c');
   c.setAlpha(140);
   g.fill(c);
   g.ellipse(s * 0.85, s * 0.5, s * 0.18, s * 0.12);
@@ -544,8 +551,8 @@ function spotCoffee(g, s) {
 
 function spotWine(g, s) {
   g.noStroke();
-  let c = g.color('#0a0f1e');
-  c.setAlpha(70);
+  let c = g.color('#2a3a55');
+  c.setAlpha(30);
   g.fill(c);
   g.ellipse(-s * 0.5, s * 0.78, s * 0.85, s * 0.12);
   g.ellipse(s * 0.33, s * 0.4, s * 0.6, s * 0.1);
@@ -580,8 +587,8 @@ function spotWine(g, s) {
 
 function spotCupcake(g, s) {
   g.noStroke();
-  let c = g.color('#0a0f1e');
-  c.setAlpha(70);
+  let c = g.color('#2a3a55');
+  c.setAlpha(30);
   g.fill(c);
   g.ellipse(0, s * 0.68, s * 1.05, s * 0.12);
   const bands = [
@@ -760,7 +767,7 @@ function drawCafeSidewalk(t, u) {
   glass.setAlpha(Math.min(255, Math.round(165 + Math.sin(t * 0.8) * 25)));
   fill(glass);
   rect(-1.9 * u, -2.15 * u, 2.9 * u, 1.35 * u, 0.08 * u);
-  const mull = color('#3a2f52');
+  const mull = color('#5c6f92');
   mull.setAlpha(230);
   fill(mull);
   rect(-0.95 * u, -2.15 * u, 0.06 * u, 1.35 * u, 0.03 * u);
@@ -831,7 +838,7 @@ function drawShedRoadway(t, u) {
   wall.setAlpha(165);
   fill(wall);
   rect(-2.25 * u, -1.62 * u, 4.5 * u, 1.38 * u, 0.06 * u);
-  const slat = color('#3a2f52');
+  const slat = color('#5c6f92');
   slat.setAlpha(210);
   fill(slat);
   rect(-2.25 * u, -1.2 * u, 4.5 * u, 0.05 * u, 0.02 * u);
@@ -1026,7 +1033,7 @@ function drawBistro(t, u) {
     wcol.setAlpha(Math.min(255, Math.round(185 + Math.sin(t * 0.8 + wx) * 30)));
     fill(wcol);
     rect(wx * u, -1.55 * u, 1.1 * u, 0.95 * u, 0.09 * u);
-    const mull = color('#3a2f52');
+    const mull = color('#5c6f92');
     mull.setAlpha(230);
     fill(mull);
     rect((wx + 0.52) * u, -1.55 * u, 0.06 * u, 0.95 * u, 0.03 * u);
@@ -1105,7 +1112,7 @@ function glyphCup(s) {
   fill('#f5ead9');
   ellipse(0, s * 0.62, s * 1.3, s * 0.16);
   rect(-s * 0.42, -s * 0.28, s * 0.84, s * 0.82, s * 0.2);
-  fill('#8a5a3b');
+  fill('#a9714c');
   ellipse(0, -s * 0.24, s * 0.72, s * 0.14);
   noFill();
   stroke('#f5ead9');
@@ -1171,7 +1178,7 @@ function glyphBurger(s) {
   noStroke();
   fill('#f0c07e');
   rect(-s * 0.42, s * 0.16, s * 0.84, s * 0.2, s * 0.09);
-  fill('#8a5a3b');
+  fill('#a9714c');
   rect(-s * 0.4, -s * 0.02, s * 0.8, s * 0.18, s * 0.07);
   fill('#ffd23f');
   rect(-s * 0.38, -s * 0.14, s * 0.76, s * 0.07, s * 0.03);
