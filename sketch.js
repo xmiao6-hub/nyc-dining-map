@@ -4,7 +4,7 @@ const MAP_MARGIN = 38;
 
 const BOROUGH_COLORS = {
   Manhattan: '#45c8ff',
-  Brooklyn: '#4caf50',
+  Brooklyn: '#2d6a4f',
   Queens: '#9c36b5',
   Bronx: '#0fa8a0',
   'Staten Island': '#c0392b',
@@ -434,18 +434,28 @@ function setStatus(msg) {
 function buildBgLayer() {
   bgLayer = createGraphics(width, height);
   bgLayer.noStroke();
-  const mid = height / 2;
-  const white = bgLayer.color(255, 255, 255);
-  const light = bgLayer.color(214, 240, 218);
-  const flat = mid * 0.6;
-  const ramp = mid * 0.34;
-  for (let y = 0; y < height; y += 2) {
-    const dist = Math.abs(y - mid);
-    let t = Math.min(1, Math.max(0, (dist - flat) / ramp));
-    const e = t * t * (3 - 2 * t);
-    bgLayer.fill(bgLayer.lerpColor(white, light, e));
-    bgLayer.rect(0, y, width, 2);
+  bgLayer.pixelDensity(1);
+  bgLayer.loadPixels();
+  const cx = width / 2;
+  const cy = height / 2;
+  const flat = 0.86;
+  const ramp = 1 - flat;
+  const Land = [214, 240, 218];
+  for (let y = 0; y < height; y++) {
+    const ny = Math.abs(y - cy) / cy;
+    for (let x = 0; x < width; x++) {
+      const nx = Math.abs(x - cx) / cx;
+      const dist = Math.max(nx, ny);
+      let t = Math.min(1, Math.max(0, (dist - flat) / ramp));
+      const e = t * t * (3 - 2 * t);
+      const k = 4 * (y * width + x);
+      bgLayer.pixels[k] = Math.round(255 + (Land[0] - 255) * e);
+      bgLayer.pixels[k + 1] = Math.round(255 + (Land[1] - 255) * e);
+      bgLayer.pixels[k + 2] = Math.round(255 + (Land[2] - 255) * e);
+      bgLayer.pixels[k + 3] = 255;
+    }
   }
+  bgLayer.updatePixels();
   if (mapRect) drawCoastline();
 }
 
@@ -481,6 +491,7 @@ function buildHeaderSpots() {
   const header = document.getElementById('page-header');
   if (!header) return;
   const defs = [
+    { fn: spotSalad, fx: 0.36, s: 62 },
     { fn: spotCoffee, fx: 0.52, s: 60 },
     { fn: spotCupcake, fx: 0.68, s: 78 },
     { fn: spotWine, fx: 0.83, s: 68 },
