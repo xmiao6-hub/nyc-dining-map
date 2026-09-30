@@ -4,10 +4,10 @@ const MAP_MARGIN = 38;
 
 const BOROUGH_COLORS = {
   Manhattan: '#e84393',
-  Brooklyn: '#e8712f',
-  Queens: '#e0a400',
+  Brooklyn: '#d95f20',
+  Queens: '#5f6ce7',
   Bronx: '#0fa8a0',
-  'Staten Island': '#6c5ce7',
+  'Staten Island': '#2d9a52',
 };
 
 let points = [];
@@ -273,7 +273,7 @@ function draw() {
 function drawMessage(title, sub) {
   push();
   noStroke();
-  fill(74, 58, 66);
+  fill(88, 76, 40);
   textAlign(CENTER, CENTER);
   textFont('Helvetica');
   textStyle(BOLD);
@@ -282,7 +282,7 @@ function drawMessage(title, sub) {
   if (sub) {
     textStyle(NORMAL);
     textSize(12);
-    fill(160, 128, 143);
+    fill(163, 148, 90);
     text(sub, width / 2, height / 2 + 14, width - 80);
   }
   pop();
@@ -356,7 +356,7 @@ function drawRing(p) {
   strokeWeight(2);
   circle(p.x, p.y, r * 2);
   drawingContext.shadowBlur = 10;
-  drawingContext.shadowColor = 'rgba(232, 67, 147, 0.6)';
+  drawingContext.shadowColor = 'rgba(216, 178, 40, 0.65)';
   stroke(74, 58, 66, 220);
   strokeWeight(1);
   circle(p.x, p.y, r * 2 + 6);
@@ -437,8 +437,8 @@ function buildBgLayer() {
   const cx = width / 2;
   const cy = height / 2;
   const maxD = Math.hypot(cx, cy);
-  const edge = bgLayer.color(250, 218, 227);
-  const center = bgLayer.color(255, 247, 239);
+  const edge = bgLayer.color(255, 235, 165);
+  const center = bgLayer.color(255, 252, 236);
   for (let d = maxD; d > 0; d -= 8) {
     const t = 1 - d / maxD;
     bgLayer.fill(bgLayer.lerpColor(edge, center, t));
@@ -452,7 +452,7 @@ function drawCoastline() {
   if (!Array.isArray(window.NYC_BOROUGHS)) return;
   g.push();
   g.noFill();
-  g.stroke(214, 122, 154, 90);
+  g.stroke(190, 155, 55, 100);
   g.strokeWeight(1);
   for (const b of window.NYC_BOROUGHS) {
     for (const ring of b.rings) {
@@ -553,7 +553,7 @@ function makePixelSprite(fn, s, pix, alpha) {
 
 function spotCoffee(g, s) {
   g.noStroke();
-  let c = g.color('#f5ead9');
+  let c = g.color('#fffef8');
   c.setAlpha(150);
   g.fill(c);
   g.ellipse(0, s * 0.55, s * 1.5, s * 0.18);
@@ -562,7 +562,7 @@ function spotCoffee(g, s) {
   c.setAlpha(160);
   g.fill(c);
   g.ellipse(0, -s * 0.21, s * 0.74, s * 0.13);
-  c = g.color('#f5ead9');
+  c = g.color('#fffef8');
   c.setAlpha(150);
   g.noFill();
   g.stroke(c);
@@ -581,7 +581,7 @@ function spotCoffee(g, s) {
   g.fill(c);
   g.ellipse(s * 0.85, s * 0.5, s * 0.18, s * 0.12);
   g.ellipse(s * 1.02, s * 0.62, s * 0.16, s * 0.11);
-  c = g.color('#f5ead9');
+  c = g.color('#fffef8');
   c.setAlpha(90);
   g.stroke(c);
   g.strokeWeight(s * 0.03);
@@ -592,7 +592,7 @@ function spotCoffee(g, s) {
 
 function spotWine(g, s) {
   g.noStroke();
-  let c = g.color('#2a3a55');
+  let c = g.color('#8a7440');
   c.setAlpha(30);
   g.fill(c);
   g.ellipse(-s * 0.5, s * 0.78, s * 0.85, s * 0.12);
@@ -606,11 +606,11 @@ function spotWine(g, s) {
   c.setAlpha(210);
   g.fill(c);
   g.rect(-s * 0.62, -s * 1.62, s * 0.24, s * 0.16, s * 0.04);
-  c = g.color('#f5ead9');
+  c = g.color('#fffef8');
   c.setAlpha(210);
   g.fill(c);
   g.rect(-s * 0.68, -s * 0.5, s * 0.36, s * 0.5, s * 0.05);
-  c = g.color('#f5ead9');
+  c = g.color('#fffef8');
   c.setAlpha(160);
   g.fill(c);
   g.rect(s * 0.3, -s * 0.2, s * 0.06, s * 0.52, s * 0.03);
@@ -628,7 +628,7 @@ function spotWine(g, s) {
 
 function spotCupcake(g, s) {
   g.noStroke();
-  let c = g.color('#2a3a55');
+  let c = g.color('#8a7440');
   c.setAlpha(30);
   g.fill(c);
   g.ellipse(0, s * 0.68, s * 1.05, s * 0.12);
@@ -660,14 +660,14 @@ function spotCupcake(g, s) {
   c.setAlpha(200);
   g.fill(c);
   g.circle(-s * 0.12, -s * 0.24, s * 0.12);
-  c = g.color('#f5ead9');
+  c = g.color('#fffef8');
   c.setAlpha(170);
   g.fill(c);
   g.ellipse(0, s * 0.58, s * 1.15, s * 0.14);
 }
 
 const PROP_TYPES = ['fork', 'knife', 'cup', 'glass', 'pizza', 'bottle', 'burger', 'fries', 'icecream'];
-const PROP_TONES = ['#ff8a5c', '#ffc93c', '#2ec4b6', '#f26d9a'];
+const PROP_TONES = ['#ff8a5c', '#f0a500', '#2ec4b6', '#f26d9a'];
 
 function initProps() {
   props = [];
@@ -792,11 +792,11 @@ function drawCafeSidewalk(t, u) {
   fill(pave);
   rect(-2.6 * u, -0.22 * u, 5.2 * u, 0.22 * u, 0.05 * u);
 
-  const wall = color('#f6cdd9');
+  const wall = color('#f7e8bd');
   wall.setAlpha(165);
   fill(wall);
   rect(-2.3 * u, -2.7 * u, 4.6 * u, 2.48 * u, 0.1 * u);
-  const trim = color('#d9a3b3');
+  const trim = color('#c9a35a');
   noFill();
   trim.setAlpha(150);
   stroke(trim);
@@ -827,7 +827,7 @@ function drawCafeSidewalk(t, u) {
   circle(1.88 * u, -0.95 * u, 0.09 * u);
 
   const poleC = color('#d9d0f2');
-  const tableC = color('#f5ead9');
+  const tableC = color('#fffef8');
   const chairC = color('#cabfe8');
   for (const um of [[-1.45, 2.35, '#ff8a5c'], [0.4, 2.15, '#f5ead9']]) {
     const ux = um[0] * u;
@@ -875,7 +875,7 @@ function drawShedRoadway(t, u) {
   fill(inside);
   rect(-2.25 * u, -1.62 * u, 4.5 * u, 1.38 * u, 0.06 * u);
 
-  const wall = color('#f6cdd9');
+  const wall = color('#f7e8bd');
   wall.setAlpha(165);
   fill(wall);
   rect(-2.25 * u, -1.62 * u, 4.5 * u, 1.38 * u, 0.06 * u);
@@ -892,7 +892,7 @@ function drawShedRoadway(t, u) {
     rect(px * u - 0.05 * u, -2.4 * u, 0.1 * u, 2.16 * u, 0.03 * u);
   }
 
-  const roof = color('#f5ead9');
+  const roof = color('#fffef8');
   roof.setAlpha(185);
   fill(roof);
   quad(-2.75 * u, -2.45 * u, 2.75 * u, -2.45 * u, 2.95 * u, -2.05 * u, -2.95 * u, -2.05 * u);
@@ -940,7 +940,7 @@ function drawShedRoadway(t, u) {
   rect(1.28 * u, -0.68 * u, 0.42 * u, 0.07 * u, 0.03 * u);
   rect(1.45 * u, -0.61 * u, 0.08 * u, 0.37 * u, 0.03 * u);
 
-  const box = color('#f5ead9');
+  const box = color('#fffef8');
   box.setAlpha(195);
   fill(box);
   rect(-3.0 * u, -0.78 * u, 0.6 * u, 0.54 * u, 0.05 * u);
@@ -956,7 +956,7 @@ function drawShedRoadway(t, u) {
   fill(hPost);
   rect(2.72 * u, -1.7 * u, 0.09 * u, 1.46 * u, 0.04 * u);
   rect(2.62 * u, -0.3 * u, 0.3 * u, 0.07 * u, 0.03 * u);
-  const hCap = color('#f5ead9');
+  const hCap = color('#fffef8');
   hCap.setAlpha(210);
   fill(hCap);
   arc(2.765 * u, -1.7 * u, 0.72 * u, 0.3 * u, PI, TWO_PI);
@@ -1021,26 +1021,26 @@ function drawBistro(t, u) {
   u *= 0.8;
   noStroke();
 
-  const wall = color('#f6cdd9');
+  const wall = color('#f7e8bd');
   wall.setAlpha(45);
   fill(wall);
   rect(-2.3 * u, -3.4 * u, 4.6 * u, 3.4 * u, 0.12 * u);
 
-  const trim = color('#d9a3b3');
+  const trim = color('#c9a35a');
   noFill();
   trim.setAlpha(150);
   stroke(trim);
   strokeWeight(0.045 * u);
   rect(-2.3 * u, -3.4 * u, 4.6 * u, 3.4 * u, 0.12 * u);
   noStroke();
-  const cornice = color('#d9a3b3');
+  const cornice = color('#c9a35a');
   cornice.setAlpha(160);
   fill(cornice);
   rect(-2.55 * u, -3.78 * u, 5.1 * u, 0.42 * u, 0.08 * u);
 
   const awnRed = color('#ff5d6c');
   awnRed.setAlpha(195);
-  const awnCream = color('#f5ead9');
+  const awnCream = color('#fffef8');
   awnCream.setAlpha(215);
   const stripeW = 0.72 * u;
   const startX = -2.16 * u;
@@ -1085,7 +1085,7 @@ function drawBistro(t, u) {
   door.setAlpha(165);
   fill(door);
   rect(-0.4 * u, -0.9 * u, 0.8 * u, 0.9 * u, 0.12 * u);
-  const doorFrame = color('#d9a3b3');
+  const doorFrame = color('#c9a35a');
   doorFrame.setAlpha(175);
   noFill();
   stroke(doorFrame);
