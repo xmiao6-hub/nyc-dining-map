@@ -906,7 +906,7 @@ function drawCafeSidewalk(t, u) {
   const poleC = color('#d9d0f2');
   const tableC = color('#ffffff');
   const chairC = color('#cabfe8');
-  for (const um of [[-1.45, 2.35, '#9a6fd6'], [0.4, 2.15, '#ffffff']]) {
+  for (const um of [[-1.45, 2.35, '#ffffff'], [0.4, 2.15, '#ffffff']]) {
     const ux = um[0] * u;
     const poleTop = -um[1] * u;
     poleC.setAlpha(245);
