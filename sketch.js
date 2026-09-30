@@ -607,9 +607,9 @@ function updateSpriteFX() {
         const jx = (Math.random() - 0.5) * 10 * sp.energy;
         const jy = (Math.random() - 0.5) * 10 * sp.energy;
         const jr = (Math.random() - 0.5) * 6 * sp.energy;
-        sp.cv.style.transform = 'var(--tf) translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px) rotate(' + jr.toFixed(1) + 'deg)';
+        sp.cv.style.transform = 'translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px) rotate(' + jr.toFixed(1) + 'deg)';
       } else if (sp.energy !== 0 && sp.energy <= 0.02) {
-        sp.cv.style.transform = 'var(--tf)';
+        sp.cv.style.transform = 'none';
         sp.energy = 0;
       }
     }
