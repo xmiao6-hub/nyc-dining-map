@@ -469,9 +469,9 @@ function drawCoastline() {
 function decorateBgLayer() {
   const g = bgLayer;
   const u = Math.min(width, height) / 10;
-  drawSpotPixel(g, spotCoffee, width * 0.89, height * 0.16, u * 0.9, 0.7, 5);
-  drawSpotPixel(g, spotWine, width * 0.1, height * 0.52, u * 0.95, 0.7, 5);
-  drawSpotPixel(g, spotCupcake, width * 0.09, height * 0.13, u * 1.2, 0.7, 5);
+  drawSpotPixel(g, spotCoffee, width * 0.945, height * 0.16, u * 0.9, 0.7, 5);
+  drawSpotPixel(g, spotWine, width * 0.075, height * 0.5, u * 0.95, 0.7, 5);
+  drawSpotPixel(g, spotCupcake, width * 0.065, height * 0.09, u * 1.2, 0.7, 5);
 }
 
 function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
@@ -495,7 +495,7 @@ function drawSpotPixel(g, fn, x, y, s, alpha, pix) {
       const gr = Math.min(255, Math.round(off.pixels[k + 1] / 32) * 32);
       const b = Math.min(255, Math.round(off.pixels[k + 2] / 32) * 32);
       g.fill(r, gr, b);
-      g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix + 1, pix + 1);
+      g.rect(x - half * pix + i * pix, y - half * pix + j * pix, pix, pix);
     }
   }
   g.drawingContext.globalAlpha = 1;
@@ -583,37 +583,39 @@ function spotCupcake(g, s) {
   let c = g.color('#0a0f1e');
   c.setAlpha(70);
   g.fill(c);
-  g.ellipse(s * 0.05, s * 0.64, s * 1.05, s * 0.12);
-  const xAt = (y) => -s * 0.42 + ((s * 0.5 - y) / (s * 0.85)) * s * 0.84;
+  g.ellipse(0, s * 0.68, s * 1.05, s * 0.12);
   const bands = [
-    [-s * 0.35, -s * 0.15, '#ffd1de'],
-    [-s * 0.15, s * 0.05, '#f0c07e'],
-    [s * 0.05, s * 0.25, '#ffb3c8'],
-    [s * 0.25, s * 0.5, '#f0c07e'],
+    [-s * 0.1, s * 0.04, '#ffb3c8'],
+    [s * 0.04, s * 0.2, '#f0c07e'],
+    [s * 0.2, s * 0.36, '#ffd1de'],
+    [s * 0.36, s * 0.5, '#f0c07e'],
   ];
   for (const bd of bands) {
     c = g.color(bd[2]);
-    c.setAlpha(215);
+    c.setAlpha(220);
     g.fill(c);
-    g.beginShape();
-    g.vertex(xAt(bd[0]), bd[0]);
-    g.vertex(s * 0.42, bd[0]);
-    g.vertex(s * 0.42, bd[1]);
-    g.vertex(xAt(bd[1]), bd[1]);
-    g.endShape(g.CLOSE);
+    g.rect(-s * 0.45, bd[0], s * 0.9, bd[1] - bd[0]);
   }
+  c = g.color('#ffd1de');
+  c.setAlpha(225);
+  g.fill(c);
+  g.quad(-s * 0.45, -s * 0.1, s * 0.45, -s * 0.1, s * 0.35, -s * 0.32, -s * 0.35, -s * 0.32);
+  c = g.color('#f0c07e');
+  c.setAlpha(200);
+  g.fill(c);
+  g.rect(-s * 0.35, -s * 0.36, s * 0.7, s * 0.04);
+  c = g.color('#ff5d6c');
+  c.setAlpha(235);
+  g.fill(c);
+  g.circle(s * 0.08, -s * 0.44, s * 0.17);
+  c = g.color('#7ddf9a');
+  c.setAlpha(200);
+  g.fill(c);
+  g.circle(-s * 0.12, -s * 0.24, s * 0.12);
   c = g.color('#f5ead9');
   c.setAlpha(170);
   g.fill(c);
-  g.ellipse(s * 0.05, s * 0.56, s * 1.15, s * 0.14);
-  c = g.color('#ff5d6c');
-  c.setAlpha(230);
-  g.fill(c);
-  g.circle(s * 0.32, -s * 0.46, s * 0.18);
-  g.stroke(c);
-  g.strokeWeight(s * 0.05);
-  g.line(s * 0.32, -s * 0.56, s * 0.4, -s * 0.66);
-  g.noStroke();
+  g.ellipse(0, s * 0.58, s * 1.15, s * 0.14);
 }
 
 const PROP_TYPES = ['fork', 'knife', 'cup', 'glass', 'pizza', 'bottle', 'burger', 'fries', 'icecream'];
