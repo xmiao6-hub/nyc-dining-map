@@ -3,9 +3,9 @@ const NYC_LIMITS = { latMin: 40.45, latMax: 40.95, lonMin: -74.3, lonMax: -73.68
 const MAP_MARGIN = 38;
 
 const BOROUGH_COLORS = {
-  Manhattan: '#e84393',
+  Manhattan: '#1c4ed8',
   Brooklyn: '#d95f20',
-  Queens: '#5f6ce7',
+  Queens: '#9c36b5',
   Bronx: '#0fa8a0',
   'Staten Island': '#c0392b',
 };
@@ -434,15 +434,18 @@ function setStatus(msg) {
 function buildBgLayer() {
   bgLayer = createGraphics(width, height);
   bgLayer.noStroke();
-  const cx = width / 2;
-  const cy = height / 2;
-  const maxD = Math.hypot(cx, cy);
-  const edge = bgLayer.color(214, 240, 218);
-  const center = bgLayer.color(247, 255, 245);
-  for (let d = maxD; d > 0; d -= 8) {
-    const t = 1 - d / maxD;
-    bgLayer.fill(bgLayer.lerpColor(edge, center, t));
-    bgLayer.circle(cx, cy, d * 2);
+  const white = bgLayer.color(250, 253, 248);
+  const deep = bgLayer.color(28, 74, 54);
+  const mid = height / 2;
+  const flat = mid * 0.62;
+  const ramp = mid * 0.38;
+  for (let y = 0; y < height; y += 2) {
+    const dist = Math.abs(y - mid);
+    let t = 0;
+    if (dist > flat) t = Math.min(1, (dist - flat) / ramp);
+    const e = t * t * (3 - 2 * t);
+    bgLayer.fill(bgLayer.lerpColor(white, deep, e));
+    bgLayer.rect(0, y, width, 2);
   }
   if (mapRect) drawCoastline();
 }
