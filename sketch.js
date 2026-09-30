@@ -869,7 +869,7 @@ function drawCafeSidewalk(t, u) {
   rect(-1.9 * u, -2.15 * u, 2.9 * u, 1.35 * u, 0.08 * u);
   noStroke();
   const shine = color('#ffffff');
-  shine.setAlpha(200);
+  shine.setAlpha(245);
   fill(shine);
   quad(-1.78 * u, -0.92 * u, -1.64 * u, -0.92 * u, -1.28 * u, -2.03 * u, -1.42 * u, -2.03 * u);
   quad(-1.52 * u, -0.92 * u, -1.46 * u, -0.92 * u, -1.1 * u, -2.03 * u, -1.16 * u, -2.03 * u);
