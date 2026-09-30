@@ -9,8 +9,12 @@ window.onerror = function (msg, src, line) { window.__errs.push(msg + ' @' + lin
 <header id="page-header"><h1>T</h1></header>
 <section class="controls">
   <div id="borough-chips" class="chips"></div>
+  <div class="filters" id="license-filters">
+    <button data-filter="ALL" class="active">All</button>
+  </div>
 </section>
 <div id="canvas-wrap"><div id="tooltip" class="hidden"></div></div>
+<footer><span class="source" id="source-note"></span></footer>
 </main>
 <pre id="report">pending</pre>
 <script src="geo.js"></script>
@@ -21,15 +25,34 @@ setTimeout(function () {
   var out = { errs: window.__errs.slice() };
   try {
     var c = document.querySelector('#canvas-wrap canvas');
-    out.w0 = c.width;
-    out.spriteCount = document.querySelectorAll('.spot-wrap').length;
-    out.edgeLefts = (function () { var a = []; document.querySelectorAll('.spot-wrap.edge').forEach(function (w) { a.push(w.style.left); }); return a.join('|'); })();
+    var g = c.getContext('2d');
+    var cssW = parseInt(getComputedStyle(c).width);
+    out.densityLocked = c.width === cssW;
+    function stats() {
+      var d = g.getImageData(0, 0, c.width, c.height).data;
+      var colored = 0;
+      for (var i = 0; i < d.length; i += 4) {
+        var r = d[i], gg = d[i + 1], b = d[i + 2];
+        if (0.3 * r + 0.6 * gg + 0.1 * b < 240 && Math.max(r, gg, b) - Math.min(r, gg, b) > 28) colored++;
+      }
+      return colored;
+    }
+    out.initialColored = stats();
+    out.size0 = c.width + 'x' + c.height;
     document.getElementById('canvas-wrap').style.width = '1400px';
     windowResized();
-    out.wAfterResize = c.width;
+    out.sizeWide = c.width + 'x' + c.height;
+    out.wideColored = stats();
     document.getElementById('canvas-wrap').style.width = '';
     windowResized();
-    out.wRestored = c.width;
+    out.sizeBack = c.width + 'x' + c.height;
+    out.backColored = stats();
+    var hdr = document.getElementById('page-header');
+    var sc = hdr.querySelector('canvas');
+    var d = sc.getContext('2d').getImageData(0, 0, sc.width, sc.height).data;
+    var tones = {};
+    for (var i = 3; i < d.length; i += 4) if (d[i] > 40) tones[(d[i] >> 3) + ',' + (d[i + 1] >> 3) + ',' + (d[i + 2] >> 3)] = 1;
+    out.spriteGrainTones = Object.keys(tones).length;
     out.chips = document.querySelectorAll('.chip').length;
   } catch (e) { out.error = String(e); }
   document.getElementById('report').textContent = 'REPORT ' + JSON.stringify(out);

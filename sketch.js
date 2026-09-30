@@ -30,7 +30,9 @@ function setup() {
   const wrap = document.getElementById('canvas-wrap');
   const w = Math.max(320, wrap.clientWidth);
   const h = Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
+  pixelDensity(1);
   createCanvas(w, h).parent(wrap);
+  noSmooth();
   buildHeaderSpots();
   buildEdgeSpots();
   const fsBtn = document.getElementById('fs-btn');
@@ -666,6 +668,10 @@ function makePixelSprite(fn, s, pix, alpha) {
         gr = Math.min(255, Math.round(gr * f));
         b = Math.min(255, Math.round(b * f));
       }
+      const hsh = Math.abs((i * 73856093) ^ (j * 19349663)) % 13 - 6;
+      r = Math.max(0, Math.min(255, r + hsh));
+      gr = Math.max(0, Math.min(255, gr + hsh));
+      b = Math.max(0, Math.min(255, b + hsh));
       out.fill(r, gr, b);
       out.rect(i * pix, j * pix, pix, pix);
     }
