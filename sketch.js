@@ -580,12 +580,12 @@ function updateSpriteFX() {
     const hovered = pageMX >= r.left && pageMX <= r.right && pageMY >= r.top && pageMY <= r.bottom;
     sp.energy = sp.energy || 0;
     if (hovered) sp.energy = 1;
-    else sp.energy *= 0.86;
+    else sp.energy *= 0.9;
     if (sp.energy > 0.02) {
-      const jx = (Math.random() - 0.5) * 9 * sp.energy;
-      const jy = (Math.random() - 0.5) * 9 * sp.energy;
-      const jr = (Math.random() - 0.5) * 5 * sp.energy;
-      sp.cv.style.transform = sp.bt + ' translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px) rotate(' + jr.toFixed(1) + 'deg)';
+      const jx = (Math.random() - 0.5) * 14 * sp.energy;
+      const jy = (Math.random() - 0.5) * 14 * sp.energy;
+      const jr = (Math.random() - 0.5) * 8 * sp.energy;
+      sp.cv.style.transform = sp.bt + ' translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px) rotate(' + jr.toFixed(1) + 'deg) scale(' + (1 + 0.06 * sp.energy).toFixed(3) + ')';
       if (Math.random() < 0.3) {
         scents.push({
           x: r.left + Math.random() * r.width,
