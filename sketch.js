@@ -4,7 +4,7 @@ const MAP_MARGIN = 38;
 
 const BOROUGH_COLORS = {
   Manhattan: '#45c8ff',
-  Brooklyn: '#e8a80c',
+  Brooklyn: '#ffa0c0',
   Queens: '#9c36b5',
   Bronx: '#0fa8a0',
   'Staten Island': '#c0392b',
