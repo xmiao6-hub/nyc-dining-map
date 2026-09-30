@@ -528,7 +528,7 @@ function buildEdgeSpots() {
   for (const sc of edgeSpots) sc.remove();
   edgeSpots = [];
   const defs = [
-    { fn: glyphPizza, s: 70, style: { left: '6px', top: '28%', transform: 'translate(0, -50%) rotate(-10deg)' } },
+    { fn: glyphPizza, s: 70, style: { left: '8px', top: '28%', transform: 'translate(0, -50%) rotate(-10deg)' } },
     { fn: spotSalad, s: 58, style: { left: '64px', top: '49%', transform: 'translate(0, -50%) rotate(4deg)' } },
     { fn: glyphFries, s: 66, style: { left: '0px', top: '71%', transform: 'translate(0, -50%) rotate(-5deg)' } },
     { fn: glyphBurger, s: 70, style: { right: '4px', top: '26%', transform: 'translate(0, -50%) rotate(8deg)' } },
