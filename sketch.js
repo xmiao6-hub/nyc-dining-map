@@ -880,7 +880,7 @@ function drawCafeSidewalk(t, u) {
   rect(-2.3 * u, -2.7 * u, 4.6 * u, 2.48 * u, 0.1 * u);
   noStroke();
 
-  const glass = color('#e3b95e');
+  const glass = color('#ffc93c');
   glass.setAlpha(Math.min(255, Math.round(230 + Math.sin(t * 0.8) * 25)));
   fill(glass);
   rect(-1.9 * u, -2.15 * u, 2.9 * u, 1.35 * u, 0.08 * u);
@@ -896,7 +896,7 @@ function drawCafeSidewalk(t, u) {
   fill(canopy);
   rect(-2.05 * u, -2.5 * u, 3.1 * u, 0.26 * u, 0.1 * u);
 
-  const door = color('#e8c46a');
+  const door = color('#ffc93c');
   door.setAlpha(165);
   fill(door);
   rect(1.3 * u, -1.65 * u, 0.72 * u, 1.43 * u, 0.1 * u);
@@ -906,7 +906,7 @@ function drawCafeSidewalk(t, u) {
   const poleC = color('#d9d0f2');
   const tableC = color('#ffffff');
   const chairC = color('#cabfe8');
-  for (const um of [[-1.45, 2.35, '#ffffff'], [0.4, 2.15, '#ffffff']]) {
+  for (const um of [[-1.45, 2.35, '#c9a8e8'], [0.4, 2.15, '#ffffff']]) {
     const ux = um[0] * u;
     const poleTop = -um[1] * u;
     poleC.setAlpha(245);
@@ -923,7 +923,7 @@ function drawCafeSidewalk(t, u) {
     ellipse(ux, -0.88 * u, 0.78 * u, 0.13 * u);
     rect(ux - 0.03 * u, -0.88 * u, 0.06 * u, 0.62 * u, 0.03 * u);
     ellipse(ux, -0.26 * u, 0.42 * u, 0.09 * u);
-    const cup = color('#e8c46a');
+    const cup = color('#ffc93c');
     cup.setAlpha(235);
     fill(cup);
     rect(ux - 0.28 * u, -1.06 * u, 0.1 * u, 0.18 * u, 0.03 * u);
