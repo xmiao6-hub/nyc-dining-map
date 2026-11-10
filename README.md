@@ -10,8 +10,14 @@ An interactive p5.js map visualizing licensed outdoor dining locations across Ne
 - Real NYC borough geography (official boundaries GeoJSON) with waterways
 - Color by borough, shape by license type (circle = sidewalk cafe, square = roadway dining)
 - Hover any point for restaurant details; click borough chips to toggle; filter by license type
-- Animated background: floating food icons that light up and pop like bubbles when touched
-- An interactive restaurant illustration that changes with the selected filter
+- Splash intro: a little walker crosses the street to the cafe, then you pick Sidewalk, Roadway, or everything before the map fades in
+- Click any location for a detail card: category icon (coffee cup, burger, bagel, pizza, gelato, taco, wine, beer, deli, ...), address, and the name linked to its Google Maps page
+- Corner cafe illustration doubles as a control — click it to cycle All / Sidewalk / Roadway
+- Sound effects on every click (synthesised with the Web Audio API, no audio files) with a mute toggle that remembers your choice
+- Map heads-up card: live counts (total / sidewalk / roadway), scale bar, **Surprise me** random pick, and **Reset**
+- Rotatable compass — drag the compass, shift-drag the map, or press Q / E (R faces north again); click the compass to snap back
+- "Closest places" list in the HUD picks the four nearest spots to the middle of the map, or to whatever you selected, with walking-scale distances
+- Background transparency slider for the coastline layer (saved between visits)
 
 ## Run
 
@@ -31,6 +37,9 @@ Then open http://localhost:8000 (serving over http lets the sketch read the live
 ## Files
 
 - `sketch.js` — the p5.js sketch
+- `intro.js` — the splash animation (walker + Sidewalk / Roadway choice)
+- `places.js` — name -> category classifier (icons + colors) and Google Maps link builder
+- `sound.js` — Web Audio click / pop / switch / reveal sounds, global click routing, mute toggle
 - `data.js` — bundled snapshot of the CSV (regenerate with `python3 convert_csv.py`)
 - `geo.js` — simplified borough boundary polygons
 - `convert_csv.py` — CSV to data.js converter

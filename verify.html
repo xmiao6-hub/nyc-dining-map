@@ -27,7 +27,10 @@ setTimeout(function () {
     var c = document.querySelector('#canvas-wrap canvas');
     var g = c.getContext('2d');
     var cssW = parseInt(getComputedStyle(c).width);
-    out.densityLocked = c.width === cssW;
+    var dpr = window.devicePixelRatio || 1;
+    out.density = pixelDensity();
+    out.densityLocked = c.width === Math.round(cssW * Math.min(2, dpr));
+    out.layersAtDensity = bgLayer.elt.width === c.width && layer.elt.width === c.width;
     function stats() {
       var d = g.getImageData(0, 0, c.width, c.height).data;
       var colored = 0;
@@ -48,11 +51,9 @@ setTimeout(function () {
     out.sizeBack = c.width + 'x' + c.height;
     out.backColored = stats();
     var hdr = document.getElementById('page-header');
-    var sc = hdr.querySelector('canvas');
-    var d = sc.getContext('2d').getImageData(0, 0, sc.width, sc.height).data;
-    var tones = {};
-    for (var i = 3; i < d.length; i += 4) if (d[i] > 40) tones[(d[i] >> 3) + ',' + (d[i + 1] >> 3) + ',' + (d[i + 2] >> 3)] = 1;
-    out.spriteGrainTones = Object.keys(tones).length;
+    out.straySprites = document.querySelectorAll('.spot-wrap, .edge').length;
+    out.headerCanvases = hdr.querySelectorAll('canvas').length;
+    out.bodyCanvases = document.querySelectorAll('body > canvas').length;
     out.chips = document.querySelectorAll('.chip').length;
   } catch (e) { out.error = String(e); }
   document.getElementById('report').textContent = 'REPORT ' + JSON.stringify(out);

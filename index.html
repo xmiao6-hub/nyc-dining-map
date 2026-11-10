@@ -6,11 +6,34 @@
   <title>NYC Outdoor Dining Map &mdash; p5.js</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="style.css?v=20260930b" />
+  <link rel="stylesheet" href="style.css?v=20261020x" />
   <script src="p5.min.js"></script>
   <script>window.p5 || document.write('<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"><\/script>')</script>
 </head>
 <body>
+  <div id="intro" class="intro" role="dialog" aria-modal="true" aria-label="Choose where to eat">
+    <div class="intro-inner">
+      <canvas id="intro-canvas" width="760" height="300" aria-hidden="true"></canvas>
+      <h2 class="intro-title">Where should we eat?</h2>
+      <p class="intro-sub">Follow the walker, then pick a seat &mdash; the map opens on it.</p>
+      <div class="intro-choices" id="intro-choices">
+        <button class="choice" data-choice="Sidewalk" data-variant="sidewalk">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12a10 10 0 0 1 20 0z" fill="currentColor"></path><path d="M12 12v9M9.5 21h5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"></path></svg>
+          <span>Sidewalk dining</span>
+        </button>
+        <button class="choice" data-choice="Roadway" data-variant="roadway">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3 4 21h16L17.5 3z" fill="currentColor" opacity="0.22"></path><path d="M12 5v3M12 11v3M12 17v3" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"></path></svg>
+          <span>Roadway dining</span>
+        </button>
+        <button class="choice ghost" data-choice="ALL" data-variant="both">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="12" r="4.2" fill="currentColor"></circle><rect x="13" y="8" width="8" height="8" rx="1.6" fill="currentColor"></rect></svg>
+          <span>Show everything</span>
+        </button>
+      </div>
+      <button id="intro-skip" class="intro-skip" type="button">Skip the walk</button>
+    </div>
+  </div>
+
   <main class="panel">
     <header id="page-header">
       <h1>NYC Outdoor Dining</h1>
@@ -20,7 +43,7 @@
     <section class="controls">
       <div id="borough-chips" class="chips" aria-label="Toggle boroughs"></div>
       <div class="shape-key">
-        <span class="key-item"><span class="dot shape-circle"></span>Sidewalk caf&eacute;</span>
+        <span class="key-item"><span class="dot shape-circle"></span>Sidewalk dining</span>
         <span class="key-item"><span class="dot shape-square"></span>Roadway dining</span>
       </div>
       <div class="filters" id="license-filters">
@@ -28,21 +51,103 @@
         <button data-filter="Sidewalk">Sidewalk</button>
         <button data-filter="Roadway">Roadway</button>
       </div>
+      <label class="bg-opacity" for="bg-opacity">
+        <span class="bg-opacity-label">Map wash</span>
+        <input id="bg-opacity" type="range" min="10" max="100" step="5" value="80" aria-label="Map background opacity" />
+        <output id="bg-opacity-value" for="bg-opacity">80%</output>
+      </label>
+      <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true" title="Sound on">
+        <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" />
+          <path d="M16 9c1.3 1.6 1.3 4.4 0 6M18.6 6.5c2.4 2.9 2.4 8.1 0 11" />
+        </svg>
+        <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4z" />
+          <path d="M16.5 9.5l4 5M20.5 9.5l-4 5" />
+        </svg>
+        <span class="sound-label">Sound</span>
+      </button>
     </section>
 
     <div id="canvas-wrap">
       <div id="tooltip" class="hidden"></div>
+      <div id="place-badge" class="place-badge hidden" aria-hidden="true"></div>
+      <div id="detail" class="hidden" role="dialog" aria-label="Location details">
+        <button id="detail-fav" class="detail-fav" type="button" aria-pressed="false" aria-label="Save to favorites" title="Save to favorites">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.9 6.8 19.6l1-5.8L3.5 9.7l5.9-.9z" /></svg>
+        </button>
+        <button id="detail-close" type="button" aria-label="Close details">&times;</button>
+        <div id="detail-icon" class="detail-icon"></div>
+        <div class="detail-body">
+          <a id="detail-name" class="detail-name" href="#" target="_blank" rel="noopener noreferrer" title="Open this place in Google Maps"></a>
+          <span id="detail-street" class="detail-street"></span>
+          <span id="detail-meta" class="detail-meta"></span>
+          <a id="detail-map" class="detail-map" href="#" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z" />
+              <circle cx="12" cy="10" r="2.6" />
+            </svg>
+            Open in Google Maps
+          </a>
+        </div>
+      </div>
     </div>
 
     <footer>
       <span><span id="stat-visible">&ndash;</span> of <span id="stat-total">&ndash;</span> locations shown</span>
-      <span class="hint">Hover a point for details &middot; click chips to toggle boroughs</span>
+      <span class="hint">Hover a point &middot; click a point for its icon and a Google Maps link &middot; toggle boroughs with the chips &middot; click the corner caf&eacute; to switch view</span>
       <span class="source" id="source-note"></span>
     </footer>
   </main>
 
-  <script src="geo.js?v=20260930b"></script>
-  <script src="data.js?v=20260930b"></script>
-  <script src="sketch.js?v=20260930b"></script>
+  <aside id="left-rail" class="left-rail" aria-label="Map tools">
+    <div id="map-hud" class="map-hud" aria-label="Map overview">
+    <div class="hud-top">
+      <div class="hud-compass" id="hud-compass" role="button" tabindex="0" title="Drag to rotate the map · click to face north again"><span id="hud-compass-n">N</span><i id="hud-compass-needle"></i></div>
+      <div class="hud-stats">
+        <b id="hud-visible">0</b>
+        <small>places on the map</small>
+        <div class="hud-split">
+          <span><i class="dot shape-circle"></i><em id="hud-sidewalk">0</em> sidewalk</span>
+          <span><i class="dot shape-square"></i><em id="hud-roadway">0</em> roadway</span>
+        </div>
+      </div>
+    </div>
+    <div class="hud-rotate">
+      <button id="hud-rot-left" type="button" aria-label="Rotate the map left" title="Rotate left">&#8634;</button>
+      <em id="hud-heading">0&deg;</em>
+      <button id="hud-rot-right" type="button" aria-label="Rotate the map right" title="Rotate right">&#8635;</button>
+      <span class="hud-rotate-hint">shift-drag &middot; Q / E</span>
+    </div>
+    <div class="hud-actions">
+      <button id="hud-surprise" type="button" title="Pick a random place that is currently visible">Surprise me</button>
+      <button id="hud-reset" type="button" title="Show every borough, every licence type, facing north">Reset</button>
+    </div>
+    <div class="hud-nearby">
+      <div class="hud-nearby-head"><span id="hud-nearby-title">Closest places</span></div>
+      <div id="hud-nearby"></div>
+    </div>
+    <div class="hud-scale" aria-hidden="true">
+      <span id="hud-scale-bar"></span><em id="hud-scale-label">1 mi</em>
+    </div>
+    </div>
+
+    <div id="fav-panel" class="fav-panel" aria-label="Saved places">
+      <div class="fav-head">
+        <span class="fav-title">Favorites</span>
+        <em id="fav-count">0</em>
+      </div>
+      <div id="fav-list" class="fav-list">
+        <div class="fav-empty">Tap the star on a place to save it</div>
+      </div>
+    </div>
+  </aside>
+
+  <script src="geo.js?v=20261020x"></script>
+  <script src="data.js?v=20261020x"></script>
+  <script src="sound.js?v=20261020x"></script>
+  <script src="places.js?v=20261020x"></script>
+  <script src="sketch.js?v=20261020x"></script>
+  <script src="intro.js?v=20261103b"></script>
 </body>
 </html>

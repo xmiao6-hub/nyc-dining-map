@@ -15,6 +15,18 @@ let dataBounds = null;
 let mapRect = null;
 let layer = null;
 let bgLayer = null;
+const BG_ALPHA_KEY = 'nyc-dining-bg-alpha';
+
+function storedBgAlpha() {
+  try {
+    const v = parseInt(window.localStorage.getItem(BG_ALPHA_KEY), 10);
+    return v >= 10 && v <= 100 ? v : 80;
+  } catch (err) {
+    return 80;
+  }
+}
+
+let bgAlphaPct = storedBgAlpha();
 let props = [];
 let ready = false;
 let fatalMsg = '';
@@ -23,23 +35,190 @@ let licenseFilter = 'ALL';
 let hovered = null;
 let fadeStart = 0;
 let restGlow = 0;
+let restHover = false;
+let hud = null;
+let hudWired = false;
+let milesPerPx = 0;
+let restHit = null;
 let tooltip = null;
+let detail = null;
+let badge = null;
+let selected = null;
 let sourceNote = null;
+let introActive = true;
+let mapRot = 0;
+let mapRotTarget = 0;
+let rotDragging = false;
+let rotDragStart = 0;
+let rotDragRot = 0;
+let lastRotSfx = 0;
+let compassEl = null;
+let headingEl = null;
+let compassShownDeg = -999;
+
+const FAV_KEY = 'nyc-dining-favs';
+let favs = new Set();
+let favWired = false;
+
+function favKey(p) {
+  return [p.name, p.street, p.borough, p.type, p.lat, p.lon].join('\u0001');
+}
+
+function loadFavs() {
+  try {
+    const raw = window.localStorage.getItem(FAV_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    favs = new Set(Array.isArray(arr) ? arr : []);
+  } catch (err) {
+    favs = new Set();
+  }
+}
+
+function saveFavs() {
+  try {
+    window.localStorage.setItem(FAV_KEY, JSON.stringify(Array.from(favs)));
+  } catch (err) {
+    /* storage unavailable */
+  }
+}
+
+function isFav(p) {
+  return p ? favs.has(favKey(p)) : false;
+}
+
+function toggleFav(p) {
+  if (!p) return false;
+  const k = favKey(p);
+  let added;
+  if (favs.has(k)) {
+    favs.delete(k);
+    added = false;
+  } else {
+    favs.add(k);
+    added = true;
+  }
+  saveFavs();
+  renderFavorites();
+  return added;
+}
+
+function findFavPoint(key) {
+  for (const p of points) {
+    if (favKey(p) === key) return p;
+  }
+  return null;
+}
+
+function renderFavorites() {
+  const list = document.getElementById('fav-list');
+  const count = document.getElementById('fav-count');
+  if (count) count.textContent = String(favs.size);
+  if (!list) return;
+  if (!favs.size) {
+    list.innerHTML = '<div class="fav-empty">Tap the star on a place to save it</div>';
+    return;
+  }
+  const entries = [];
+  favs.forEach((k) => {
+    const p = findFavPoint(k);
+    if (p) entries.push({ k: k, p: p });
+  });
+  if (!entries.length) {
+    list.innerHTML = '<div class="fav-empty">Tap the star on a place to save it</div>';
+    return;
+  }
+  entries.sort((a, b) => String(a.p.name).localeCompare(String(b.p.name)));
+  let html = '';
+  for (const it of entries) {
+    const p = it.p;
+    if (!p.cat) p.cat = classifyPlace(p);
+    const col = p.cat && p.cat.color ? p.cat.color : boroughColor(p.borough);
+    const icon = p.cat && typeof placeIconSvg === 'function' ? placeIconSvg(p.cat, 12) : '';
+    const active = selected === p ? ' active' : '';
+    html +=
+      '<button type="button" class="fav-row' + active + '" data-key="' + encodeURIComponent(it.k) + '">' +
+      '<i style="background:' + col + '">' + icon + '</i>' +
+      '<span>' + escapeHtml(trimName(p.name)) + '</span>' +
+      '<em>' + escapeHtml(p.borough) + '</em>' +
+      '<span class="fav-remove" role="button" title="Remove from favorites" aria-label="Remove from favorites">&times;</span>' +
+      '</button>';
+  }
+  list.innerHTML = html;
+}
+
+function updateDetailFavButton(p) {
+  const btn = document.getElementById('detail-fav');
+  if (!btn) return;
+  const on = isFav(p);
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.setAttribute('aria-label', on ? 'Remove from favorites' : 'Save to favorites');
+  btn.setAttribute('title', on ? 'Remove from favorites' : 'Save to favorites');
+}
+
+function wireFavorites() {
+  if (favWired) return;
+  favWired = true;
+  const favBtn = document.getElementById('detail-fav');
+  if (favBtn) {
+    favBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (!selected) return;
+      const added = toggleFav(selected);
+      updateDetailFavButton(selected);
+      playSfx(added ? 'pop' : 'close');
+    });
+  }
+  const list = document.getElementById('fav-list');
+  if (list) {
+    const leave = () => {
+      setHover(null);
+      hideTooltip();
+    };
+    list.addEventListener('pointerenter', leave);
+    list.addEventListener('pointerleave', leave);
+    list.addEventListener('click', (ev) => {
+      const row = ev.target && ev.target.closest ? ev.target.closest('.fav-row') : null;
+      if (!row) return;
+      const key = decodeURIComponent(row.dataset.key || '');
+      const rm = ev.target && ev.target.closest ? ev.target.closest('.fav-remove') : null;
+      if (rm) {
+        favs.delete(key);
+        saveFavs();
+        renderFavorites();
+        if (selected && favKey(selected) === key) updateDetailFavButton(selected);
+        playSfx('close');
+        return;
+      }
+      const p = findFavPoint(key);
+      if (p) selectPoint(p);
+    });
+  }
+}
 
 function setup() {
   const wrap = document.getElementById('canvas-wrap');
   const w = Math.max(320, wrap.clientWidth);
   const h = Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
-  pixelDensity(1);
+  pixelDensity(Math.min(2, window.devicePixelRatio || 1));
   createCanvas(w, h).parent(wrap);
-  noSmooth();
-  buildHeaderSpots();
-  buildEdgeSpots();
   tooltip = document.getElementById('tooltip');
   sourceNote = document.getElementById('source-note');
   tooltip.classList.add('hidden');
+  detail = document.getElementById('detail');
+  badge = document.getElementById('place-badge');
+  hud = document.getElementById('map-hud');
+  loadFavs();
+  wireFavorites();
+  if (detail) detail.classList.add('hidden');
+  if (badge) badge.classList.add('hidden');
+  const closeBtn = document.getElementById('detail-close');
+  if (closeBtn) closeBtn.addEventListener('click', clearSelection);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') clearSelection();
+  });
   buildBgLayer();
-  initProps();
+  wireBgOpacity();
+  wireHud();
 
   loadData()
     .then((rows) => {
@@ -53,10 +232,14 @@ function setup() {
       for (const b of boroughList()) visibleBoroughs[b] = true;
       buildChips();
       wireFilters();
+      wireBgOpacity();
+      wireHud();
       redrawLayer();
       fadeStart = millis();
       ready = true;
       updateStats();
+      renderFavorites();
+      syncFilterButtons();
     })
     .catch((err) => {
       console.error(err);
@@ -66,6 +249,12 @@ function setup() {
         sourceNote.style.color = '#ff6b6b';
       }
     });
+
+  if (document.getElementById('intro')) {
+    noLoop();
+  } else {
+    introActive = false;
+  }
 }
 
 function loadData() {
@@ -148,6 +337,7 @@ function parseCsv(text) {
       name: (cells[idx['Assumed Name(s)']] || cells[idx['Business Legal Name']] || 'Unknown').trim(),
       street: (cells[idx['Street']] || '').trim(),
       borough: (cells[idx['Borough']] || '').trim() || 'Unknown',
+      city: (cells[idx['City']] || '').trim(),
       type: (cells[idx['License Type']] || '').trim(),
       lat: parseFloat(cells[idx['Latitude']]),
       lon: parseFloat(cells[idx['Longitude']]),
@@ -225,6 +415,7 @@ function layoutMap() {
   const mapW = milesWide * scale;
   const mapH = milesTall * scale;
   mapRect = { x: (width - mapW) / 2, y: (height - mapH) / 2, w: mapW, h: mapH };
+  updateScaleBar(scale);
 }
 
 function lonLatToXY(lon, lat) {
@@ -233,11 +424,25 @@ function lonLatToXY(lon, lat) {
   return { x: mapRect.x + fx * mapRect.w, y: mapRect.y + fy * mapRect.h };
 }
 
+function rotScreen(x, y) {
+  if (!mapRot) return { x: x, y: y };
+  const cx = width / 2;
+  const cy = height / 2;
+  const s = Math.sin(mapRot);
+  const c = Math.cos(mapRot);
+  const dx = x - cx;
+  const dy = y - cy;
+  return { x: cx + dx * c - dy * s, y: cy + dx * s + dy * c };
+}
+
 function projectPoints() {
   for (const p of points) {
     const c = lonLatToXY(p.lon, p.lat);
-    p.x = c.x;
-    p.y = c.y;
+    p.mx = c.x;
+    p.my = c.y;
+    const s = rotScreen(c.x, c.y);
+    p.x = s.x;
+    p.y = s.y;
   }
 }
 
@@ -253,32 +458,52 @@ function visiblePoints() {
 }
 
 function redrawLayer() {
+  if (layer) layer.remove();
   layer = createGraphics(width, height);
+  layer.pixelDensity(Math.min(2, window.devicePixelRatio || 1));
   layer.clear();
   layer.noStroke();
   for (const p of visiblePoints()) {
     const glow = layer.color(boroughColor(p.borough));
     glow.setAlpha(38);
     layer.fill(glow);
-    if (p.type === 'Roadway') layer.rect(p.x - 6, p.y - 6, 12, 12, 2);
-    else layer.circle(p.x, p.y, 11);
+    if (p.type === 'Roadway') layer.rect(p.mx - 6, p.my - 6, 12, 12, 2);
+    else layer.circle(p.mx, p.my, 11);
   }
   for (const p of visiblePoints()) {
     const core = layer.color(boroughColor(p.borough));
     core.setAlpha(220);
     layer.fill(core);
-    if (p.type === 'Roadway') layer.rect(p.x - 3.2, p.y - 3.2, 6.4, 6.4, 1.5);
-    else layer.circle(p.x, p.y, 5.2);
+    if (p.type === 'Roadway') layer.rect(p.mx - 3.2, p.my - 3.2, 6.4, 6.4, 1.5);
+    else layer.circle(p.mx, p.my, 5.2);
   }
 }
 
 function draw() {
+  clear();
   resetMatrix();
+  easeMapRot();
+  updateCompass();
   projectPoints();
-  updateSpriteFX();
+  push();
+  translate(width / 2, height / 2);
+  rotate(mapRot);
+  translate(-width / 2, -height / 2);
   image(bgLayer, 0, 0);
+  if (!introActive && ready && layer) {
+    const t = constrain((millis() - fadeStart) / 900, 0, 1);
+    if (t < 1) {
+      tint(255, 255 * (1 - Math.pow(1 - t, 3)));
+      image(layer, 0, 0);
+      noTint();
+    } else {
+      image(layer, 0, 0);
+    }
+  }
+  pop();
+  if (introActive) return;
   drawRestaurant();
-  drawProps();
+  cursor(restHover ? 'pointer' : 'default');
   if (fatalMsg) {
     drawMessage('Could not load data', fatalMsg);
     return;
@@ -287,16 +512,65 @@ function draw() {
     drawMessage('Loading NYC dining data\u2026', '');
     return;
   }
-  const t = constrain((millis() - fadeStart) / 900, 0, 1);
-  if (t < 1) {
-    tint(255, 255 * (1 - Math.pow(1 - t, 3)));
-    image(layer, 0, 0);
-    noTint();
-  } else {
-    image(layer, 0, 0);
-  }
   updateHover();
-  if (hovered) drawRing(hovered);
+  if (selected && !isVisible(selected)) clearSelection();
+  if (selected) drawSelection(selected);
+  if (hovered && hovered !== selected) drawRing(hovered);
+}
+
+function easeMapRot() {
+  const diff = mapRotTarget - mapRot;
+  if (Math.abs(diff) < 0.0006) {
+    if (mapRot !== mapRotTarget) {
+      mapRot = mapRotTarget;
+      updateNearby();
+    }
+    return;
+  }
+  mapRot += diff * 0.18;
+}
+
+function updateCompass() {
+  if (!compassEl || !headingEl) return;
+  const deg = ((mapRot * 180 / Math.PI) % 360 + 360) % 360;
+  if (Math.abs(deg - compassShownDeg) < 0.4) return;
+  compassShownDeg = deg;
+  compassEl.style.transform = 'rotate(' + deg.toFixed(1) + 'deg)';
+  compassEl.classList.toggle('rotated', deg > 0.5 && deg < 359.5);
+  const shown = Math.round(deg);
+  headingEl.textContent = (shown < 100 ? (shown < 10 ? '00' : '0') : '') + shown + '\u00b0 ' + cardinal(shown);
+}
+
+function cardinal(deg) {
+  const names = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  return names[Math.round(((deg % 360) / 45)) % 8];
+}
+
+function setMapRot(rad, snap, quiet) {
+  let v = rad;
+  let snapped = false;
+  if (snap) {
+    const deg = ((v * 180 / Math.PI) % 360 + 360) % 360;
+    if (deg < 2 || deg > 358) {
+      snapped = mapRotTarget !== 0;
+      v = 0;
+    }
+  }
+  if (Math.abs(v - mapRotTarget) < 0.0001) return;
+  mapRotTarget = v;
+  if (quiet) return;
+  const now = millis();
+  if (snapped) {
+    lastRotSfx = now;
+    playSfx('switch');
+  } else if (now - lastRotSfx > 110) {
+    lastRotSfx = now;
+    playSfx('rot');
+  }
+}
+
+function nudgeMapRot(step, quiet) {
+  setMapRot(mapRotTarget + step, true, quiet);
 }
 
 function drawMessage(title, sub) {
@@ -318,7 +592,7 @@ function drawMessage(title, sub) {
 }
 
 function updateHover() {
-  if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) {
+  if (restHover || isMouseInDetail() || isMouseInHud() || mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) {
     setHover(null);
     return;
   }
@@ -334,6 +608,258 @@ function updateHover() {
   setHover(best);
 }
 
+function isMouseInHud() {
+  const rail = document.getElementById('left-rail');
+  const el = rail || hud;
+  if (!el || el.classList.contains('hidden')) return false;
+  const wrap = document.getElementById('canvas-wrap');
+  const r = el.getBoundingClientRect();
+  const wr = wrap.getBoundingClientRect();
+  const px = wr.left + mouseX;
+  const py = wr.top + mouseY;
+  return px >= r.left && px <= r.right && py >= r.top && py <= r.bottom;
+}
+
+function wireHud() {
+  if (!hud || hudWired) return;
+  hudWired = true;
+  compassEl = document.getElementById('hud-compass');
+  headingEl = document.getElementById('hud-heading');
+  const surprise = document.getElementById('hud-surprise');
+  const reset = document.getElementById('hud-reset');
+  const leave = () => {
+    setHover(null);
+    hideTooltip();
+  };
+  hud.addEventListener('pointerenter', leave);
+  hud.addEventListener('pointerleave', leave);
+  if (surprise) {
+    surprise.addEventListener('click', () => {
+      const vis = visiblePoints();
+      if (!vis.length) {
+        playSfx('close');
+        return;
+      }
+      selectPoint(vis[Math.floor(Math.random() * vis.length)]);
+    });
+  }
+  if (reset) {
+    reset.addEventListener('click', () => {
+      for (const b of boroughList()) visibleBoroughs[b] = true;
+      buildChips();
+      applyLicenseFilter('ALL', true);
+      clearSelection();
+      mapRotTarget = 0;
+      playSfx('switch');
+    });
+  }
+  wireCompass();
+  wireNearby();
+}
+
+function wireCompass() {
+  const el = document.getElementById('hud-compass');
+  let dragging = false;
+  let startAngle = 0;
+  let startRot = 0;
+  let moved = 0;
+  if (!el) return;
+  const angleOf = (ev) => {
+    const r = el.getBoundingClientRect();
+    return Math.atan2(ev.clientY - (r.top + r.height / 2), ev.clientX - (r.left + r.width / 2));
+  };
+  el.addEventListener('pointerdown', (ev) => {
+    dragging = true;
+    moved = 0;
+    startAngle = angleOf(ev);
+    startRot = mapRotTarget;
+    try {
+      if (el.setPointerCapture) el.setPointerCapture(ev.pointerId);
+    } catch (err) {
+      /* synthetic pointer, no capture */
+    }
+    ev.preventDefault();
+  });
+  el.addEventListener('pointermove', (ev) => {
+    if (!dragging) return;
+    let d = angleOf(ev) - startAngle;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    moved = Math.max(moved, Math.abs(d));
+    setMapRot(startRot + d, false);
+  });
+  const endDrag = (ev) => {
+    if (!dragging) return;
+    dragging = false;
+    try {
+      if (el.releasePointerCapture) el.releasePointerCapture(ev.pointerId);
+    } catch (err) {
+      /* ignore */
+    }
+    if (moved < 0.07) {
+      if (mapRotTarget === 0) {
+        playSfx('tap');
+        return;
+      }
+      mapRotTarget = 0;
+      playSfx('switch');
+    } else {
+      setMapRot(mapRotTarget, true);
+    }
+  };
+  el.addEventListener('pointerup', endDrag);
+  el.addEventListener('pointercancel', endDrag);
+  el.addEventListener('keydown', (ev) => {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if (ev.key === 'q' || ev.key === 'ArrowLeft') {
+      nudgeMapRot(-Math.PI / 12);
+    } else if (ev.key === 'e' || ev.key === 'ArrowRight') {
+      nudgeMapRot(Math.PI / 12);
+    } else if (ev.key === 'Enter' || ev.key === ' ') {
+      mapRotTarget = 0;
+      playSfx('switch');
+    } else {
+      return;
+    }
+    ev.preventDefault();
+    ev.stopPropagation();
+  });
+  const left = document.getElementById('hud-rot-left');
+  const right = document.getElementById('hud-rot-right');
+  if (left) left.addEventListener('click', () => nudgeMapRot(-Math.PI / 12));
+  if (right) right.addEventListener('click', () => nudgeMapRot(Math.PI / 12));
+}
+
+function trimName(name) {
+  const s = String(name || '');
+  return s.length > 24 ? s.slice(0, 23) + '\u2026' : s;
+}
+
+function updateNearby() {
+  const list = document.getElementById('hud-nearby');
+  const title = document.getElementById('hud-nearby-title');
+  if (!list || !title) return;
+  if (!ready || introActive) {
+    list.innerHTML = '';
+    title.textContent = 'Closest places';
+    return;
+  }
+  const focus = selected;
+  const fx = focus ? focus.x : width / 2;
+  const fy = focus ? focus.y : height / 2;
+  title.textContent = focus ? 'Closest to ' + trimName(focus.name) : 'Closest to the middle';
+  const rows = [];
+  for (const p of visiblePoints()) {
+    if (p === selected) continue;
+    if (p.x < -24 || p.y < -24 || p.x > width + 24 || p.y > height + 24) continue;
+    rows.push({ p: p, d: Math.hypot(p.x - fx, p.y - fy) });
+  }
+  if (!rows.length) {
+    list.innerHTML = '<div class="near-empty">Nothing on the map right now</div>';
+    return;
+  }
+  rows.sort((a, b) => a.d - b.d);
+  const top = rows.slice(0, 4);
+  let html = '';
+  for (const it of top) {
+    const p = it.p;
+    const mi = it.d * milesPerPx;
+    const dist = mi < 0.15 ? Math.max(1, Math.round(mi * 5280)) + ' ft' : mi.toFixed(1) + ' mi';
+    if (!p.cat) p.cat = classifyPlace(p);
+    const col = p.cat && p.cat.color ? p.cat.color : boroughColor(p.borough);
+    const icon = p.cat && typeof placeIconSvg === 'function' ? placeIconSvg(p.cat, 12) : '';
+    html +=
+      '<button type="button" class="near-row" data-i="' + points.indexOf(p) + '">' +
+      '<i style="background:' + col + '">' + icon + '</i>' +
+      '<span>' + escapeHtml(trimName(p.name)) + '</span>' +
+      '<em>' + dist + '</em></button>';
+  }
+  list.innerHTML = html;
+}
+
+function wireNearby() {
+  const list = document.getElementById('hud-nearby');
+  if (!list) return;
+  list.addEventListener('click', (ev) => {
+    const row = ev.target && ev.target.closest ? ev.target.closest('.near-row') : null;
+    if (!row) return;
+    const p = points[parseInt(row.dataset.i, 10)];
+    if (p) selectPoint(p);
+  });
+}
+
+function updateHudStats() {
+  if (!hud) return;
+  const vis = visiblePoints();
+  let side = 0;
+  let road = 0;
+  for (const p of vis) {
+    if (p.type === 'Roadway') road += 1;
+    else side += 1;
+  }
+  const v = document.getElementById('hud-visible');
+  const s = document.getElementById('hud-sidewalk');
+  const r = document.getElementById('hud-roadway');
+  if (v) v.textContent = vis.length.toLocaleString('en-US');
+  if (s) s.textContent = side.toLocaleString('en-US');
+  if (r) r.textContent = road.toLocaleString('en-US');
+  updateNearby();
+}
+
+function updateScaleBar(scale) {
+  if (!hud || !(scale > 0)) return;
+  milesPerPx = 1 / scale;
+  const bar = document.getElementById('hud-scale-bar');
+  const label = document.getElementById('hud-scale-label');
+  if (!bar || !label) return;
+  const choices = [0.1, 0.25, 0.5, 1, 2, 5, 10];
+  let best = choices[0];
+  let bestDiff = Infinity;
+  for (const c of choices) {
+    const px = c * scale;
+    const diff = Math.abs(px - 62);
+    if (px > 18 && px < 120 && diff < bestDiff) {
+      bestDiff = diff;
+      best = c;
+    }
+  }
+  bar.style.width = Math.round(best * scale) + 'px';
+  label.textContent = best >= 1 ? best + ' mi' : Math.round(best * 5280) + ' ft';
+}
+
+function isMouseInDetail() {
+  if (!detail || detail.classList.contains('hidden')) return false;
+  const wrap = document.getElementById('canvas-wrap');
+  const r = detail.getBoundingClientRect();
+  const wr = wrap.getBoundingClientRect();
+  const px = wr.left + mouseX;
+  const py = wr.top + mouseY;
+  return px >= r.left && px <= r.right && py >= r.top && py <= r.bottom;
+}
+
+function drawSelection(p) {
+  const t = millis() / 1000;
+  const pulse = 0.5 + 0.5 * Math.sin(t * 2.6);
+  const col = p.cat ? p.cat.color : boroughColor(p.borough);
+  push();
+  noFill();
+  const halo = color(col);
+  halo.setAlpha(30 + 22 * pulse);
+  noStroke();
+  fill(halo);
+  circle(p.x, p.y, 34 + 6 * pulse);
+  drawingContext.shadowBlur = 16;
+  drawingContext.shadowColor = col;
+  stroke(col);
+  strokeWeight(2.2);
+  circle(p.x, p.y, 24 + 3 * pulse);
+  drawingContext.shadowBlur = 0;
+  stroke(255, 255, 255, 200);
+  strokeWeight(1.4);
+  circle(p.x, p.y, 19);
+  pop();
+}
+
 function setHover(p) {
   if (p === hovered) {
     if (p) positionTooltip(p);
@@ -342,14 +868,15 @@ function setHover(p) {
   hovered = p;
   if (!p) {
     tooltip.classList.add('hidden');
-    cursor('default');
+    cursor(restHover ? 'pointer' : 'default');
     return;
   }
   tooltip.innerHTML =
     '<strong>' + escapeHtml(p.name) + '</strong>' +
     '<span class="street">' + escapeHtml(p.street) + '</span>' +
     '<span class="meta"><i style="background:' + boroughColor(p.borough) + '"></i>' +
-    escapeHtml(p.borough) + ' &middot; ' + escapeHtml(p.type) + '</span>';
+    escapeHtml(p.borough) + ' &middot; ' + escapeHtml(p.type) + '</span>' +
+    '<span class="cat-hint">Click for details</span>';
   tooltip.classList.remove('hidden');
   positionTooltip(p);
   cursor('pointer');
@@ -417,6 +944,7 @@ function buildChips() {
     btn.addEventListener('click', () => {
       visibleBoroughs[b] = visibleBoroughs[b] === false;
       btn.classList.toggle('off', visibleBoroughs[b] === false);
+      clearSelection();
       redrawLayer();
       fadeStart = millis();
       updateStats();
@@ -428,16 +956,214 @@ function buildChips() {
 function wireFilters() {
   const holder = document.getElementById('license-filters');
   for (const btn of holder.querySelectorAll('button')) {
-    btn.addEventListener('click', () => {
-      licenseFilter = btn.dataset.filter;
-      for (const b of holder.querySelectorAll('button')) {
-        b.classList.toggle('active', b === btn);
-      }
-      redrawLayer();
-      fadeStart = millis();
-      updateStats();
-    });
+    btn.addEventListener('click', () => applyLicenseFilter(btn.dataset.filter));
   }
+  syncFilterButtons();
+}
+
+function syncFilterButtons() {
+  for (const btn of document.querySelectorAll('#license-filters button')) {
+    btn.classList.toggle('active', btn.dataset.filter === licenseFilter);
+  }
+}
+
+function playSfx(name) {
+  if (typeof SFX !== 'undefined' && SFX && SFX.play) SFX.play(name);
+}
+
+function applyLicenseFilter(value, silent) {
+  licenseFilter = value;
+  hovered = null;
+  clearSelection();
+  if (!silent) playSfx('switch');
+  if (tooltip) tooltip.classList.add('hidden');
+  syncFilterButtons();
+  if (ready) {
+    redrawLayer();
+    updateStats();
+  }
+  fadeStart = millis();
+}
+
+function cycleLicenseFilter() {
+  const order = ['ALL', 'Sidewalk', 'Roadway'];
+  const i = order.indexOf(licenseFilter);
+  applyLicenseFilter(order[(i + 1) % order.length]);
+}
+
+function mousePressed(event) {
+  if (introActive) return;
+  const target = event && event.target;
+  if (!target || target.tagName !== 'CANVAS') return;
+  if (keyIsDown(SHIFT)) return;
+  if (isMouseInHud() || isMouseInDetail()) return;
+  if (restHit && mouseX >= restHit.x0 && mouseX <= restHit.x1 && mouseY >= restHit.y0 && mouseY <= restHit.y1) {
+    cycleLicenseFilter();
+    return;
+  }
+  const hit = nearestPoint(20);
+  if (hit) selectPoint(hit);
+  else {
+    playSfx(selected ? 'close' : 'tap');
+    clearSelection();
+  }
+}
+
+function mouseDragged() {
+  if (introActive || !mouseIsPressed || !keyIsDown(SHIFT)) return;
+  if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return;
+  if (isMouseInHud() || isMouseInDetail()) return;
+  const a = Math.atan2(mouseY - height / 2, mouseX - width / 2);
+  if (!rotDragging) {
+    rotDragging = true;
+    rotDragStart = a;
+    rotDragRot = mapRotTarget;
+    return;
+  }
+  let d = a - rotDragStart;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  setMapRot(rotDragRot + d, false);
+  return false;
+}
+
+function mouseReleased() {
+  if (!rotDragging) return;
+  rotDragging = false;
+  setMapRot(mapRotTarget, true);
+}
+
+function keyPressed(event) {
+  if (introActive) return;
+  if (event && (event.metaKey || event.ctrlKey || event.altKey)) return;
+  const active = document.activeElement;
+  if (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return;
+  const k = (key || '').toLowerCase();
+  if (k === 'q') {
+    nudgeMapRot(-Math.PI / 12);
+  } else if (k === 'e') {
+    nudgeMapRot(Math.PI / 12);
+  } else if (k === 'r') {
+    if (mapRotTarget === 0) return;
+    mapRotTarget = 0;
+    playSfx('switch');
+  }
+}
+
+function nearestPoint(maxDist) {
+  if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return null;
+  const lim = maxDist * maxDist;
+  let best = null;
+  let bestD = lim;
+  for (const p of visiblePoints()) {
+    const d = (p.x - mouseX) ** 2 + (p.y - mouseY) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = p;
+    }
+  }
+  return best;
+}
+
+function selectPoint(p) {
+  selected = p;
+  p.cat = classifyPlace(p);
+  playSfx('pop');
+  updateNearby();
+  renderFavorites();
+  if (!detail) return;
+  const url = googleMapsUrl(p);
+  const icon = document.getElementById('detail-icon');
+  const name = document.getElementById('detail-name');
+  const street = document.getElementById('detail-street');
+  const meta = document.getElementById('detail-meta');
+  const mapLink = document.getElementById('detail-map');
+  if (!icon || !name || !street || !meta || !mapLink) return;
+  icon.innerHTML = placeIconSvg(p.cat, 22);
+  icon.style.background = p.cat.color;
+  name.textContent = p.name;
+  name.href = url;
+  street.textContent = p.street || '—';
+  meta.innerHTML =
+    '<i style="background:' + boroughColor(p.borough) + '"></i>' +
+    escapeHtml(p.borough) + ' &middot; ' + escapeHtml(p.type) +
+    ' <em>' + escapeHtml(p.cat.label) + '</em>';
+  mapLink.href = url;
+  updateDetailFavButton(p);
+  detail.classList.remove('hidden');
+  if (badge) {
+    badge.innerHTML = placeIconSvg(p.cat, 16);
+    badge.style.background = p.cat.color;
+    badge.classList.remove('hidden');
+  }
+  positionDetail();
+  hideTooltip();
+  emitCategoryIcons(p);
+}
+
+function emitCategoryIcons(p) {
+  const wrap = document.getElementById('canvas-wrap');
+  if (!wrap || !p.cat || typeof placeIconSvg !== 'function') return;
+  const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (wrap.querySelectorAll('.float-ico').length > 40) return;
+  const count = reduceMotion ? 3 : 8;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('span');
+    el.className = 'float-ico';
+    el.innerHTML = placeIconSvg(p.cat, 18);
+    const svg = el.querySelector('svg');
+    if (svg) {
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', '100%');
+    }
+    const size = 13 + Math.random() * 12;
+    el.style.left = p.x + 'px';
+    el.style.top = (p.y - 8) + 'px';
+    el.style.width = size.toFixed(1) + 'px';
+    el.style.height = size.toFixed(1) + 'px';
+    el.style.color = p.cat.color;
+    el.style.setProperty('--dx', ((Math.random() - 0.5) * 130).toFixed(1) + 'px');
+    el.style.setProperty('--sway', ((Math.random() - 0.5) * 30).toFixed(1) + 'px');
+    el.style.setProperty('--rise', '-' + (70 + Math.random() * 95).toFixed(0) + 'px');
+    el.style.setProperty('--rot', ((Math.random() - 0.5) * 90).toFixed(0) + 'deg');
+    el.style.animationDuration = (reduceMotion ? 0.9 : 1.5 + Math.random() * 1.1).toFixed(2) + 's';
+    const delay = i * 0.06 + Math.random() * 0.06;
+    el.style.animationDelay = delay.toFixed(2) + 's';
+    const remove = () => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    };
+    el.addEventListener('animationend', remove);
+    window.setTimeout(remove, (delay + parseFloat(el.style.animationDuration) + 0.5) * 1000);
+    wrap.appendChild(el);
+  }
+}
+
+function clearSelection() {
+  selected = null;
+  if (detail) detail.classList.add('hidden');
+  if (badge) badge.classList.add('hidden');
+  updateNearby();
+  renderFavorites();
+}
+
+function positionDetail() {
+  if (!selected || !detail || detail.classList.contains('hidden')) return;
+  const wrap = document.getElementById('canvas-wrap');
+  const ch = wrap.clientHeight;
+  if (badge) {
+    badge.style.left = selected.x + 'px';
+    badge.style.top = selected.y + 'px';
+  }
+  const dh = detail.offsetHeight;
+  const x = 14;
+  let y = 14;
+  y = Math.max(8, Math.min(y, ch - dh - 8));
+  detail.style.left = x + 'px';
+  detail.style.top = y + 'px';
+}
+
+function hideTooltip() {
+  if (tooltip) tooltip.classList.add('hidden');
 }
 
 function updateStats() {
@@ -446,6 +1172,7 @@ function updateStats() {
   const totalEl = document.getElementById('stat-total');
   if (visEl) visEl.textContent = vis.length.toLocaleString('en-US');
   if (totalEl) totalEl.textContent = points.length.toLocaleString('en-US');
+  updateHudStats();
   const counts = {};
   for (const p of vis) counts[p.borough] = (counts[p.borough] || 0) + 1;
   for (const el of document.querySelectorAll('.count')) {
@@ -461,31 +1188,103 @@ function setStatus(msg) {
 }
 
 function buildBgLayer() {
+  if (bgLayer) bgLayer.remove();
   bgLayer = createGraphics(width, height);
+  const dens = Math.min(2, window.devicePixelRatio || 1);
+  bgLayer.pixelDensity(dens);
   bgLayer.noStroke();
-  bgLayer.pixelDensity(1);
   bgLayer.loadPixels();
-  const cx = width / 2;
-  const cy = height / 2;
+  const pw = Math.round(width * dens);
+  const ph = Math.round(height * dens);
   const flat = 0.86;
   const ramp = 1 - flat;
   const Land = [230, 246, 234];
-  for (let y = 0; y < height; y++) {
-    const ny = Math.abs(y - cy) / cy;
-    for (let x = 0; x < width; x++) {
-      const nx = Math.abs(x - cx) / cx;
-      const dist = Math.max(nx, ny);
-      let t = Math.min(1, Math.max(0, (dist - flat) / ramp));
-      const e = t * t * (3 - 2 * t);
-      const k = 4 * (y * width + x);
-      bgLayer.pixels[k] = Math.round(255 + (Land[0] - 255) * e);
-      bgLayer.pixels[k + 1] = Math.round(255 + (Land[1] - 255) * e);
-      bgLayer.pixels[k + 2] = Math.round(255 + (Land[2] - 255) * e);
-      bgLayer.pixels[k + 3] = 255;
+  const px = bgLayer.pixels;
+  const eRow = new Float32Array(ph);
+  const eCol = new Float32Array(pw);
+  for (let y = 0; y < ph; y++) {
+    const t = Math.min(1, Math.max(0, (Math.abs(y - ph / 2) / (ph / 2) - flat) / ramp));
+    eRow[y] = t * t * (3 - 2 * t);
+  }
+  for (let x = 0; x < pw; x++) {
+    const t = Math.min(1, Math.max(0, (Math.abs(x - pw / 2) / (pw / 2) - flat) / ramp));
+    eCol[x] = t * t * (3 - 2 * t);
+  }
+  const rTab = new Uint8Array(256);
+  const gTab = new Uint8Array(256);
+  const bTab = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) {
+    const e = i / 255;
+    rTab[i] = Math.round(255 + (Land[0] - 255) * e);
+    gTab[i] = Math.round(255 + (Land[1] - 255) * e);
+    bTab[i] = Math.round(255 + (Land[2] - 255) * e);
+  }
+  for (let y = 0; y < ph; y++) {
+    const ey = eRow[y];
+    const rowBase = y * pw;
+    for (let x = 0; x < pw; x++) {
+      const e = (ey > eCol[x] ? ey : eCol[x]) * 255 | 0;
+      const k = 4 * (rowBase + x);
+      px[k] = rTab[e];
+      px[k + 1] = gTab[e];
+      px[k + 2] = bTab[e];
+      px[k + 3] = 255;
     }
   }
   bgLayer.updatePixels();
   if (mapRect) drawCoastline();
+  setBgAlpha(bgAlphaPct);
+}
+
+function setBgAlpha(pct) {
+  bgAlphaPct = Math.min(100, Math.max(10, Math.round(pct)));
+  if (!bgLayer) return;
+  bgLayer.loadPixels();
+  const px = bgLayer.pixels;
+  const a = Math.round((255 * bgAlphaPct) / 100);
+  for (let i = 3; i < px.length; i += 4) px[i] = a;
+  bgLayer.updatePixels();
+}
+
+let bgOpacityWired = false;
+
+function wireBgOpacity() {
+  const input = document.getElementById('bg-opacity');
+  const out = document.getElementById('bg-opacity-value');
+  if (!input || bgOpacityWired) return;
+  bgOpacityWired = true;
+  input.value = String(bgAlphaPct);
+  if (out) out.textContent = bgAlphaPct + '%';
+  let pending = false;
+  const apply = (sound) => {
+    const next = Math.min(100, Math.max(10, parseInt(input.value, 10) || 80));
+    bgAlphaPct = next;
+    if (out) out.textContent = next + '%';
+    try {
+      window.localStorage.setItem(BG_ALPHA_KEY, String(next));
+    } catch (err) {
+      /* storage blocked */
+    }
+    if (pending) return;
+    pending = true;
+    window.setTimeout(() => {
+      pending = false;
+      setBgAlpha(bgAlphaPct);
+      if (typeof redraw === 'function') {
+        try {
+          redraw();
+        } catch (err) {
+          /* loop still running */
+        }
+      }
+    }, 0);
+    if (sound) playSfx('switch');
+  };
+  input.addEventListener('input', () => apply(false));
+  input.addEventListener('change', () => apply(true));
+  input.addEventListener('keydown', () => {
+    window.setTimeout(() => apply(false), 0);
+  });
 }
 
 function drawCoastline() {
@@ -510,481 +1309,6 @@ function drawCoastline() {
   g.drawingContext.shadowBlur = 0;
   g.pop();
 }
-
-let headerSpots = [];
-let edgeSpots = [];
-let spotSprites = [];
-let scentOverlay = null;
-let scents = [];
-let pageMX = -999;
-let pageMY = -999;
-
-function buildHeaderSpots() {
-  for (const s of headerSpots) s.wrap.remove();
-  headerSpots = [];
-  const header = document.getElementById('page-header');
-  if (!header) return;
-  const defs = [
-    { fn: spotCoffee, fx: 0.52, s: 60, bt: 'translate(-50%, -50%)', kind: 'coffee' },
-    { fn: spotCupcake, fx: 0.68, s: 78, bt: 'translate(-50%, -50%)', kind: 'food' },
-    { fn: spotWine, fx: 0.83, s: 68, bt: 'translate(-50%, -50%)', kind: 'food' },
-  ];
-  for (const d of defs) {
-    const cv = makePixelSprite(d.fn, d.s, 3, 0.55);
-    cv.style('display', 'block');
-    const wrap = document.createElement('div');
-    wrap.className = 'spot-wrap';
-    wrap.style.position = 'absolute';
-    wrap.style.left = Math.round(d.fx * 100) + '%';
-    wrap.style.top = '50%';
-    wrap.style.transform = d.bt;
-    wrap.style.pointerEvents = 'none';
-    wrap.appendChild(cv.elt);
-    header.appendChild(wrap);
-    headerSpots.push({ cv, wrap, bt: d.bt, kind: d.kind });
-  }
-}
-
-function buildEdgeSpots() {
-  for (const s of edgeSpots) s.wrap.remove();
-  edgeSpots = [];
-  const defs = [
-    { fn: glyphPizza, s: 70, left: '8px', top: '28%', bt: 'translate(0, -50%) rotate(-10deg)', kind: 'food' },
-    { fn: spotSalad, s: 58, left: '64px', top: '49%', bt: 'translate(0, -50%) rotate(4deg)', kind: 'food' },
-    { fn: glyphFries, s: 66, left: '0px', top: '71%', bt: 'translate(0, -50%) rotate(-5deg)', kind: 'food' },
-    { fn: glyphBurger, s: 70, right: '4px', top: '26%', bt: 'translate(0, -50%) rotate(8deg)', kind: 'food' },
-    { fn: glyphIceCream, s: 68, right: '58px', top: '68%', bt: 'translate(0, -50%) rotate(6deg)', kind: 'food' },
-  ];
-  let i = 0;
-  for (const d of defs) {
-    const cv = makePixelSprite(d.fn, d.s, 3, 0.5);
-    cv.style('display', 'block');
-    cv.elt.style.animationDelay = (-(i * 0.09)).toFixed(2) + 's';
-    const wrap = document.createElement('div');
-    wrap.className = 'spot-wrap edge';
-    wrap.style.position = 'fixed';
-    wrap.style.zIndex = 2;
-    wrap.style.left = d.left;
-    wrap.style.top = d.top;
-    if (d.right) wrap.style.right = d.right;
-    wrap.style.transform = d.bt;
-    wrap.appendChild(cv.elt);
-    document.body.appendChild(wrap);
-    edgeSpots.push({ cv, wrap, bt: d.bt, kind: d.kind, x: d.left, y: parseFloat(d.top) / 100, offsetX: 0, offsetY: 0, phase: i * 1.17, hovered: false, energy: 0 });
-    i++;
-  }
-  spotSprites = [...headerSpots, ...edgeSpots];
-  buildScentOverlay();
-}
-
-function buildScentOverlay() {
-  if (scentOverlay) scentOverlay.remove();
-  scentOverlay = createGraphics(window.innerWidth, window.innerHeight);
-  scentOverlay.parent(document.body);
-  scentOverlay.style('position', 'fixed');
-  scentOverlay.style('left', '0');
-  scentOverlay.style('top', '0');
-  scentOverlay.style('z-index', '3');
-  scentOverlay.style('pointer-events', 'none');
-  scentOverlay.style('display', 'block');
-  window.addEventListener('mousemove', (e) => {
-    pageMX = e.clientX;
-    pageMY = e.clientY;
-  });
-}
-
-function updateSpriteFX() {
-  const t = millis() / 1000;
-  for (const sp of spotSprites) {
-    const r = sp.cv.elt.getBoundingClientRect();
-    sp.hovered = pageMX >= r.left && pageMX <= r.right && pageMY >= r.top && pageMY <= r.bottom;
-    const hovered = sp.hovered;
-    sp.energy = sp.energy || 0;
-    if (hovered) {
-      sp.energy = 1;
-      if (Math.sin(t * 1.4 + sp.phase) > -0.4 && Math.random() < 0.3) {
-        scents.push({
-          x: r.left + Math.random() * r.width,
-          y: r.top + r.height * (0.1 + Math.random() * 0.3),
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: -(0.5 + Math.random() * 0.7),
-          life: 0,
-          max: 70 + Math.random() * 50,
-          size: (sp.kind === 'coffee' ? 11 : 6) + Math.random() * 6,
-          col: sp.kind === 'coffee' ? '#f7f3ea' : (Math.random() < 0.5 ? '#ffd9ec' : '#dcc8f0'),
-          ph: Math.random() * TWO_PI,
-        });
-      }
-    } else {
-      sp.energy *= 0.9;
-      if (sp.energy > 0.02) {
-        const jx = (Math.random() - 0.5) * 10 * sp.energy;
-        const jy = (Math.random() - 0.5) * 10 * sp.energy;
-        const jr = (Math.random() - 0.5) * 6 * sp.energy;
-        sp.cv.style.transform = 'translate(' + jx.toFixed(1) + 'px,' + jy.toFixed(1) + 'px) rotate(' + jr.toFixed(1) + 'deg)';
-      } else if (sp.energy !== 0 && sp.energy <= 0.02) {
-        sp.cv.style.transform = 'none';
-        sp.energy = 0;
-      }
-    }
-  }
-  if (!scentOverlay) return;
-  scentOverlay.clear();
-  scentOverlay.noStroke();
-  for (let i = scents.length - 1; i >= 0; i--) {
-    const p = scents[i];
-    p.life++;
-    p.x += p.vx + Math.sin(t * 2 + p.ph + p.life * 0.04) * 0.5;
-    p.y += p.vy;
-    if (p.life > p.max || p.y < -20) {
-      scents.splice(i, 1);
-      continue;
-    }
-    const a = 255 * (1 - p.life / p.max) * 0.75;
-    const c = scentOverlay.color(p.col);
-    c.setAlpha(a);
-    scentOverlay.fill(c);
-    scentOverlay.circle(p.x, p.y, p.size * (1 + (p.life / p.max) * 0.8));
-  }
-}
-
-function makePixelSprite(fn, s, pix, alpha) {
-  const half = Math.ceil((s * 1.4) / pix);
-  const off = createGraphics(half * 2, half * 2);
-  off.pixelDensity(1);
-  off.noStroke();
-  off.push();
-  off.translate(half, half);
-  off.scale(1 / pix);
-  fn(off, s);
-  off.pop();
-  off.loadPixels();
-  const out = createGraphics(half * 2 * pix, half * 2 * pix);
-  out.pixelDensity(1);
-  out.noStroke();
-  out.drawingContext.globalAlpha = alpha;
-  for (let j = 0; j < half * 2; j++) {
-    for (let i = 0; i < half * 2; i++) {
-      const k = 4 * (j * half * 2 + i);
-      if (off.pixels[k + 3] < 40) continue;
-      let r = Math.min(255, Math.round(off.pixels[k] / 32) * 32);
-      let gr = Math.min(255, Math.round(off.pixels[k + 1] / 32) * 32);
-      let b = Math.min(255, Math.round(off.pixels[k + 2] / 32) * 32);
-      const lum = 0.3 * r + 0.6 * gr + 0.1 * b;
-      if (lum > 0 && lum < 55) {
-        const f = 55 / lum;
-        r = Math.min(255, Math.round(r * f));
-        gr = Math.min(255, Math.round(gr * f));
-        b = Math.min(255, Math.round(b * f));
-      }
-      const hsh = Math.abs((i * 73856093) ^ (j * 19349663)) % 25 - 12;
-      r = Math.max(0, Math.min(255, r + hsh));
-      gr = Math.max(0, Math.min(255, gr + hsh));
-      b = Math.max(0, Math.min(255, b + hsh));
-      out.fill(r, gr, b);
-      out.rect(i * pix, j * pix, pix, pix);
-    }
-  }
-  out.drawingContext.globalAlpha = 1;
-  off.remove();
-  return out;
-}
-
-function spotSalad(g, s) {
-  g.noStroke();
-  let c = g.color('#5a7a62');
-  c.setAlpha(30);
-  g.fill(c);
-  g.ellipse(0, s * 0.55, s * 0.9, s * 0.1);
-  c = g.color('#7ddf9a');
-  c.setAlpha(215);
-  g.fill(c);
-  g.circle(-s * 0.26, -s * 0.34, s * 0.36);
-  g.circle(s * 0.26, -s * 0.34, s * 0.36);
-  g.circle(0, -s * 0.42, s * 0.4);
-  c = g.color('#a8e6b8');
-  c.setAlpha(215);
-  g.fill(c);
-  g.circle(-s * 0.14, -s * 0.5, s * 0.3);
-  g.circle(s * 0.16, -s * 0.52, s * 0.26);
-  c = g.color('#ff5d6c');
-  c.setAlpha(225);
-  g.fill(c);
-  g.circle(s * 0.02, -s * 0.62, s * 0.18);
-  c = g.color('#d9f2c8');
-  c.setAlpha(220);
-  g.fill(c);
-  g.circle(-s * 0.3, -s * 0.58, s * 0.16);
-  g.stroke('#7ddf9a');
-  g.strokeWeight(s * 0.03);
-  g.line(-s * 0.34, -s * 0.6, -s * 0.26, -s * 0.56);
-  g.noStroke();
-  c = g.color('#fffef8');
-  c.setAlpha(235);
-  g.fill(c);
-  g.arc(0, -s * 0.05, s * 1.1, s * 0.95, 0, PI);
-  c = g.color('#d9a3b3');
-  c.setAlpha(150);
-  g.fill(c);
-  g.arc(0, -s * 0.05, s * 1.1, s * 0.95, 0.12, PI - 0.12);
-  c = g.color('#fffef8');
-  c.setAlpha(235);
-  g.fill(c);
-  g.ellipse(0, s * 0.46, s * 0.5, s * 0.09);
-}
-
-function spotCoffee(g, s) {
-  g.noStroke();
-  let c = g.color('#fffef8');
-  c.setAlpha(150);
-  g.fill(c);
-  g.ellipse(0, s * 0.55, s * 1.5, s * 0.18);
-  g.rect(-s * 0.45, -s * 0.25, s * 0.9, s * 0.8, s * 0.2);
-  c = g.color('#a9714c');
-  c.setAlpha(160);
-  g.fill(c);
-  g.ellipse(0, -s * 0.21, s * 0.74, s * 0.13);
-  c = g.color('#fffef8');
-  c.setAlpha(150);
-  g.noFill();
-  g.stroke(c);
-  g.strokeWeight(s * 0.13);
-  g.arc(s * 0.4, s * 0.05, s * 0.62, s * 0.55, -HALF_PI, HALF_PI);
-  c = g.color('#ffffff');
-  c.setAlpha(110);
-  g.stroke(c);
-  g.strokeWeight(s * 0.09);
-  g.arc(-s * 0.12, -s * 0.62, s * 0.3, s * 0.38, PI, TWO_PI);
-  g.arc(s * 0.14, -s * 0.82, s * 0.24, s * 0.32, PI, TWO_PI);
-  g.arc(-s * 0.02, -s * 1.0, s * 0.2, s * 0.28, PI, TWO_PI);
-  g.noStroke();
-  c = g.color('#a9714c');
-  c.setAlpha(140);
-  g.fill(c);
-  g.ellipse(s * 0.85, s * 0.5, s * 0.18, s * 0.12);
-  g.ellipse(s * 1.02, s * 0.62, s * 0.16, s * 0.11);
-  c = g.color('#fffef8');
-  c.setAlpha(90);
-  g.stroke(c);
-  g.strokeWeight(s * 0.03);
-  g.line(s * 0.79, s * 0.5, s * 0.91, s * 0.5);
-  g.line(s * 0.96, s * 0.62, s * 1.08, s * 0.62);
-  g.noStroke();
-}
-
-function spotWine(g, s) {
-  g.noStroke();
-  let c = g.color('#5a7a62');
-  c.setAlpha(30);
-  g.fill(c);
-  g.ellipse(-s * 0.5, s * 0.78, s * 0.85, s * 0.12);
-  g.ellipse(s * 0.33, s * 0.4, s * 0.6, s * 0.1);
-  c = g.color('#f0a83c');
-  c.setAlpha(190);
-  g.fill(c);
-  g.rect(-s * 0.75, -s * 1.15, s * 0.5, s * 1.9, s * 0.1);
-  g.rect(-s * 0.6, -s * 1.5, s * 0.2, s * 0.4, s * 0.04);
-  c = g.color('#ff5d6c');
-  c.setAlpha(210);
-  g.fill(c);
-  g.rect(-s * 0.62, -s * 1.62, s * 0.24, s * 0.16, s * 0.04);
-  c = g.color('#fffef8');
-  c.setAlpha(210);
-  g.fill(c);
-  g.rect(-s * 0.68, -s * 0.5, s * 0.36, s * 0.5, s * 0.05);
-  c = g.color('#fffef8');
-  c.setAlpha(160);
-  g.fill(c);
-  g.rect(s * 0.3, -s * 0.2, s * 0.06, s * 0.52, s * 0.03);
-  g.ellipse(s * 0.33, s * 0.36, s * 0.5, s * 0.1);
-  g.noFill();
-  g.stroke(c);
-  g.strokeWeight(s * 0.08);
-  g.arc(s * 0.33, -s * 0.32, s * 0.55, s * 0.78, 0, PI);
-  g.noStroke();
-  c = g.color('#ff5d6c');
-  c.setAlpha(210);
-  g.fill(c);
-  g.arc(s * 0.33, -s * 0.32, s * 0.4, s * 0.6, 0.3, PI - 0.3, CHORD);
-}
-
-function spotCupcake(g, s) {
-  g.noStroke();
-  let c = g.color('#5a7a62');
-  c.setAlpha(30);
-  g.fill(c);
-  g.ellipse(0, s * 0.68, s * 1.05, s * 0.12);
-  const bands = [
-    [-s * 0.1, s * 0.04, '#ffb3c8'],
-    [s * 0.04, s * 0.2, '#f0c07e'],
-    [s * 0.2, s * 0.36, '#ffd1de'],
-    [s * 0.36, s * 0.5, '#f0c07e'],
-  ];
-  for (const bd of bands) {
-    c = g.color(bd[2]);
-    c.setAlpha(220);
-    g.fill(c);
-    g.rect(-s * 0.45, bd[0], s * 0.9, bd[1] - bd[0]);
-  }
-  c = g.color('#ffd1de');
-  c.setAlpha(225);
-  g.fill(c);
-  g.quad(-s * 0.45, -s * 0.1, s * 0.45, -s * 0.1, s * 0.35, -s * 0.32, -s * 0.35, -s * 0.32);
-  c = g.color('#f0c07e');
-  c.setAlpha(200);
-  g.fill(c);
-  g.rect(-s * 0.35, -s * 0.36, s * 0.7, s * 0.04);
-  c = g.color('#ff5d6c');
-  c.setAlpha(235);
-  g.fill(c);
-  g.circle(s * 0.08, -s * 0.44, s * 0.17);
-  c = g.color('#7ddf9a');
-  c.setAlpha(200);
-  g.fill(c);
-  g.circle(-s * 0.12, -s * 0.24, s * 0.12);
-  c = g.color('#fffef8');
-  c.setAlpha(170);
-  g.fill(c);
-  g.ellipse(0, s * 0.58, s * 1.15, s * 0.14);
-}
-
-const PROP_TYPES = ['fork', 'knife', 'cup', 'glass', 'pizza', 'bottle', 'burger', 'fries', 'icecream'];
-const PROP_TONES = ['#ff8a5c', '#f0a500', '#2ec4b6', '#f26d9a'];
-
-function initProps() {
-  props = [];
-  const n = Math.max(20, Math.round((width * height) / 30000));
-  for (let i = 0; i < n; i++) {
-    const prop = {};
-    randomizeProp(prop, random(1));
-    props.push(prop);
-  }
-}
-
-function randomizeProp(prop, startY) {
-  const s = random(15, 40);
-  prop.type = random(PROP_TYPES);
-  prop.tone = random(PROP_TONES);
-  prop.x = random(1);
-  prop.y = startY;
-  prop.s = s;
-  prop.alpha = map(s, 15, 40, 175, 95);
-  prop.rot = random(-0.5, 0.5);
-  prop.rotNow = prop.rot;
-  prop.speed = random(0.006, 0.02);
-  prop.swayAmp = random(5, 14);
-  prop.swayFreq = random(0.15, 0.45);
-  prop.spinAmp = random(0.05, 0.18);
-  prop.spinFreq = random(0.1, 0.3);
-  prop.phase = random(TWO_PI);
-  prop.state = 'drift';
-  prop.timer = 0;
-  prop.drops = [];
-  prop.cx = 0;
-  prop.cy = 0;
-}
-
-function drawProps() {
-  const t = millis() / 1000;
-  const dt = Math.min(deltaTime / 1000, 0.1);
-  for (const prop of props) {
-    if (prop.state === 'drift') {
-      prop.y -= prop.speed * dt;
-      if (prop.y < -0.12) prop.y = 1.12;
-      prop.cx = prop.x * width + Math.sin(t * prop.swayFreq + prop.phase) * prop.swayAmp;
-      prop.cy = prop.y * height + Math.cos(t * prop.swayFreq * 0.8 + prop.phase) * prop.swayAmp * 0.5;
-      prop.rotNow = prop.rot + Math.sin(t * prop.spinFreq + prop.phase) * prop.spinAmp;
-      prop.hovered = mouseX >= 0 && mouseY >= 0 && mouseX <= width && mouseY <= height &&
-        (mouseX - prop.cx) ** 2 + (mouseY - prop.cy) ** 2 < (prop.s * 0.9) ** 2;
-      prop.energy = prop.hovered ? Math.min(1, (prop.energy || 0) + 0.25) : (prop.energy || 0) * 0.88;
-      if (prop.hovered && Math.random() < 0.3) {
-        const crc = document.querySelector('#canvas-wrap canvas').getBoundingClientRect();
-        scents.push({
-          x: crc.left + prop.cx + (Math.random() - 0.5) * prop.s * 0.7,
-          y: crc.top + prop.cy - prop.s * 0.25,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: -(0.5 + Math.random() * 0.6),
-          life: 0,
-          max: 60 + Math.random() * 40,
-          size: 5 + Math.random() * 5,
-          col: Math.random() < 0.5 ? '#ffd9ec' : '#d9f2c8',
-          ph: Math.random() * TWO_PI,
-        });
-      }
-      prop.jx = (Math.random() - 0.5) * 7 * prop.energy;
-      prop.jy = (Math.random() - 0.5) * 7 * prop.energy;
-      if (mouseX >= 0 && mouseY >= 0 && mouseX <= width && mouseY <= height) {
-        const d2 = (mouseX - prop.cx) ** 2 + (mouseY - prop.cy) ** 2;
-        if (d2 < (prop.s * 0.85) ** 2) {
-          prop.state = 'lit';
-          prop.timer = 0;
-        }
-      }
-      drawingContext.globalAlpha = (prop.alpha / 255) * (0.72 + 0.28 * Math.sin(t * 0.6 + prop.phase));
-      push();
-      translate(prop.cx + (prop.jx || 0), prop.cy + (prop.jy || 0));
-      rotate(prop.rotNow);
-      drawGlyph(prop.type, window, prop.s);
-      pop();
-      drawingContext.globalAlpha = 1;
-    } else if (prop.state === 'lit') {
-      prop.timer += dt;
-      const p = Math.min(prop.timer / 0.38, 1);
-      const halo = color(prop.tone);
-      halo.setAlpha(70 * p);
-      push();
-      noStroke();
-      fill(halo);
-      circle(prop.cx, prop.cy, prop.s * 1.9);
-      pop();
-      drawingContext.globalAlpha = 0.62 + 0.38 * p;
-      push();
-      translate(prop.cx, prop.cy);
-      rotate(prop.rotNow);
-      scale(1 + p * 0.18);
-      drawGlyph(prop.type, window, prop.s);
-      pop();
-      drawingContext.globalAlpha = 1;
-      if (p >= 1) {
-        prop.state = 'pop';
-        prop.timer = 0;
-        prop.drops = [];
-        for (let i = 0; i < 6; i++) {
-          prop.drops.push({ a: (i * TWO_PI) / 6 + random(-0.4, 0.4), w: random(0.7, 1.3) });
-        }
-      }
-    } else {
-      prop.timer += dt;
-      const p = Math.min(prop.timer / 0.3, 1);
-      const c = color(prop.tone);
-      c.setAlpha(255 * (1 - p));
-      drawingContext.globalAlpha = 1 - p;
-      push();
-      translate(prop.cx, prop.cy);
-      rotate(prop.rotNow);
-      scale(1.18 + p * 0.5);
-      drawGlyph(prop.type, window, prop.s);
-      pop();
-      drawingContext.globalAlpha = 1;
-      push();
-      noFill();
-      stroke(c);
-      strokeWeight(2.2);
-      circle(prop.cx, prop.cy, prop.s * 1.5 * (1 + p * 1.6));
-      pop();
-      noStroke();
-      for (const d of prop.drops) {
-        const dc = color(prop.tone);
-        dc.setAlpha(170 * (1 - p));
-        fill(dc);
-        const dd = prop.s * (0.55 + 1.7 * p) * d.w;
-        circle(prop.cx + Math.cos(d.a) * dd, prop.cy + Math.sin(d.a) * dd, prop.s * 0.12 * (1 - p * 0.5));
-      }
-      if (p >= 1) randomizeProp(prop, 1.04 + random(0.08));
-    }
-  }
-}
-
 
 function drawCafeSidewalk(t, u) {
   noStroke();
@@ -1116,7 +1440,7 @@ function drawPatio(t, u) {
     const umb = color('#ffffff');
     umb.setAlpha(255);
     fill(umb);
-    g_arc = arc(tx, poleTop, 1.35 * u, 0.52 * u, PI, TWO_PI);
+    arc(tx, poleTop, 1.35 * u, 0.52 * u, PI, TWO_PI);
     c = color('#e8c46a');
     c.setAlpha(200);
     fill(c);
@@ -1154,42 +1478,36 @@ function drawPatio(t, u) {
   }
 }
 
-function drawGlyph(type, g, s) {
-  if (type === 'fork') glyphFork(g, s);
-  else if (type === 'knife') glyphKnife(g, s);
-  else if (type === 'cup') glyphCup(g, s);
-  else if (type === 'glass') glyphGlass(g, s);
-  else if (type === 'pizza') glyphPizza(g, s);
-  else if (type === 'icecream') glyphIceCream(g, s);
-  else if (type === 'burger') glyphBurger(g, s);
-  else if (type === 'fries') glyphFries(g, s);
-  else glyphBottle(g, s);
-}
+const REST_LABELS = { ALL: 'All outdoor dining', Sidewalk: 'Sidewalk dining', Roadway: 'Roadway dining' };
+const REST_HINTS = { ALL: 'click for sidewalk dining', Sidewalk: 'click for roadway dining', Roadway: 'click to show everything' };
 
 function drawRestaurant() {
   const t = millis() / 1000;
-  const u = Math.min(width, height) / 11;
+  const u = Math.min(width, height) / 19;
+  let ax = width - 1.9 * u;
+  let hw = 2.5 * u;
+  if (licenseFilter === 'Sidewalk') {
+    ax = width - 2.15 * u;
+    hw = 2.75 * u;
+  } else if (licenseFilter === 'Roadway') {
+    ax = width - 2.35 * u;
+    hw = 2.95 * u;
+  }
+  const baseY = height - 6;
+  const topY = baseY - 4.5 * u;
+  restHit = { x0: ax - hw - 8, y0: topY - 40, x1: Math.min(width, ax + hw + 8), y1: baseY + 6 };
+  restHover =
+    mouseX >= restHit.x0 && mouseX <= restHit.x1 &&
+    mouseY >= restHit.y0 && mouseY <= restHit.y1;
+
+  const dt = Math.min(deltaTime / 1000, 0.1);
+  restGlow += ((restHover ? 1 : 0) - restGlow) * Math.min(1, dt * 7);
+  if (restGlow < 0.005) restGlow = 0;
+
   push();
   noStroke();
-  let ax = width - 2.4 * u;
-  let hw = 2.3;
-  if (licenseFilter === 'Sidewalk') {
-    ax = width - 2.75 * u;
-    hw = 2.75;
-  } else if (licenseFilter === 'Roadway') {
-    ax = width - 2.95 * u;
-    hw = 2.95;
-  }
-  const mx = mouseX;
-  const my = mouseY;
-  const hovered =
-    mx >= ax - hw * u && mx <= ax + hw * u &&
-    my >= height * 0.99 - 4.7 * u && my <= height * 0.99 + 4;
-  const dt = Math.min(deltaTime / 1000, 0.1);
-  restGlow += ((hovered ? 1 : 0) - restGlow) * Math.min(1, dt * 7);
-  if (restGlow < 0.005) restGlow = 0;
-  translate(ax, height * 0.99);
-  scale(1 + restGlow * 0.08);
+  translate(ax, baseY);
+  scale(1 + restGlow * 0.07);
   drawingContext.globalAlpha = 0.88 + 0.12 * restGlow;
   if (restGlow > 0.02) {
     drawingContext.shadowBlur = 12 * restGlow;
@@ -1200,6 +1518,49 @@ function drawRestaurant() {
   else drawBistro(t, u);
   drawingContext.shadowBlur = 0;
   drawingContext.globalAlpha = 1;
+  pop();
+
+  drawRestaurantCaption(ax, topY);
+}
+
+function drawRestaurantCaption(ax, topY) {
+  const label = REST_LABELS[licenseFilter] || REST_LABELS.ALL;
+  const hint = REST_HINTS[licenseFilter] || REST_HINTS.ALL;
+  push();
+  noStroke();
+  textAlign(CENTER, CENTER);
+  textFont('Helvetica');
+  textSize(11);
+  textStyle(BOLD);
+  const lw = textWidth(label);
+  textSize(9.5);
+  textStyle(NORMAL);
+  const hw = textWidth(hint);
+  const pw = Math.max(lw, hw) + 20;
+  const ph = 34;
+  const px = Math.min(constrain(ax - pw / 2, 6, width - pw - 6), width - 6);
+  const py = topY - ph - 8;
+  const bg = color('#ffffff');
+  bg.setAlpha(restHover ? 245 : 205);
+  fill(bg);
+  if (restHover) {
+    drawingContext.shadowBlur = 16;
+    drawingContext.shadowColor = 'rgba(90, 165, 255, 0.5)';
+  }
+  rect(px, py, pw, ph, 10);
+  drawingContext.shadowBlur = 0;
+  noFill();
+  stroke(74, 163, 255, restHover ? 230 : 130);
+  strokeWeight(1);
+  rect(px, py, pw, ph, 10);
+  noStroke();
+  fill(46, 70, 54);
+  textStyle(BOLD);
+  text(label, px + pw / 2, py + 11);
+  fill(110, 138, 120, 150 + 105 * restGlow);
+  textStyle(NORMAL);
+  textSize(9.5);
+  text(hint, px + pw / 2, py + 24);
   pop();
 }
 
@@ -1313,138 +1674,6 @@ function drawBistro(t, u) {
 
 }
 
-function glyphFork(g, s) {
-  g.noStroke();
-  g.fill('#f5ead9');
-  for (let i = -1.5; i <= 1.5; i++) {
-    g.rect(i * s * 0.2 - s * 0.05, -s, s * 0.1, s * 0.58, s * 0.05);
-  }
-  g.rect(-s * 0.42, -s * 0.52, s * 0.84, s * 0.22, s * 0.1);
-  g.rect(-s * 0.09, -s * 0.34, s * 0.18, s * 1.34, s * 0.09);
-  g.fill('#c9bda8');
-  g.rect(s * 0.01, -s * 0.34, s * 0.08, s * 1.34, s * 0.04);
-}
-
-function glyphKnife(g, s) {
-  g.noStroke();
-  g.fill('#f5ead9');
-  g.rect(-s * 0.09, -s * 0.1, s * 0.18, s * 1.1, s * 0.09);
-  g.triangle(-s * 0.09, -s * 0.1, s * 0.3, -s * 0.9, -s * 0.09, -s * 0.95);
-  g.fill('#c9bda8');
-  g.rect(s * 0.01, -s * 0.1, s * 0.08, s * 1.1, s * 0.04);
-}
-
-function glyphCup(g, s) {
-  g.noStroke();
-  g.fill('#f5ead9');
-  g.ellipse(0, s * 0.62, s * 1.3, s * 0.16);
-  g.rect(-s * 0.42, -s * 0.28, s * 0.84, s * 0.82, s * 0.2);
-  g.fill('#a9714c');
-  g.ellipse(0, -s * 0.24, s * 0.72, s * 0.14);
-  noFill();
-  g.stroke('#f5ead9');
-  g.strokeWeight(s * 0.12);
-  g.arc(s * 0.36, -s * 0.05, s * 0.6, s * 0.55, -HALF_PI, HALF_PI);
-  g.stroke('#ffffff');
-  g.strokeWeight(s * 0.07);
-  g.arc(-s * 0.1, -s * 0.62, s * 0.28, s * 0.34, PI, TWO_PI);
-  g.arc(s * 0.14, -s * 0.78, s * 0.22, s * 0.3, PI, TWO_PI);
-  g.noStroke();
-}
-
-function glyphGlass(g, s) {
-  g.noStroke();
-  g.fill('#ff5d6c');
-  g.arc(0, -s * 0.3, s * 0.6, s * 0.72, 0.25, PI - 0.25, CHORD);
-  g.fill('#f5ead9');
-  g.rect(-s * 0.05, s * 0.2, s * 0.1, s * 0.55, s * 0.05);
-  g.ellipse(0, s * 0.8, s * 0.62, s * 0.12);
-  noFill();
-  g.stroke('#f5ead9');
-  g.strokeWeight(s * 0.1);
-  g.arc(0, -s * 0.3, s * 0.85, s * 1.0, 0, PI);
-  g.stroke('#ffffff');
-  g.strokeWeight(s * 0.05);
-  g.line(-s * 0.18, -s * 0.5, -s * 0.1, -s * 0.18);
-  g.noStroke();
-}
-
-function glyphPizza(g, s) {
-  g.noStroke();
-  g.fill('#ffd23f');
-  g.triangle(-s * 0.48, -s * 0.42, s * 0.48, -s * 0.42, 0, s * 0.72);
-  g.fill('#f0c07e');
-  g.arc(0, -s * 0.42, s * 0.96, s * 0.3, PI, TWO_PI);
-  g.fill('#ff5d6c');
-  g.ellipse(-s * 0.16, -s * 0.05, s * 0.16);
-  g.ellipse(s * 0.14, s * 0.12, s * 0.14);
-  g.ellipse(0, s * 0.38, s * 0.12);
-  g.fill('#7ddf9a');
-  g.circle(s * 0.1, -s * 0.16, s * 0.07);
-  g.circle(-s * 0.2, s * 0.22, s * 0.07);
-}
-
-function glyphIceCream(g, s) {
-  g.noStroke();
-  g.fill('#f0c07e');
-  g.triangle(-s * 0.26, s * 0.08, s * 0.26, s * 0.08, 0, s * 0.66);
-  g.stroke('#c98d4c');
-  g.strokeWeight(s * 0.04);
-  g.line(-s * 0.16, s * 0.18, s * 0.1, s * 0.42);
-  g.line(s * 0.16, s * 0.18, -s * 0.1, s * 0.42);
-  g.noStroke();
-  g.fill('#ffb3c8');
-  g.circle(0, -s * 0.08, s * 0.58);
-  g.fill('#9ff0e0');
-  g.circle(0, -s * 0.44, s * 0.42);
-  g.fill('#ff5d6c');
-  g.circle(-s * 0.1, -s * 0.66, s * 0.12);
-}
-
-function glyphBurger(g, s) {
-  g.noStroke();
-  g.fill('#f0c07e');
-  g.rect(-s * 0.42, s * 0.16, s * 0.84, s * 0.2, s * 0.09);
-  g.fill('#a9714c');
-  g.rect(-s * 0.4, -s * 0.02, s * 0.8, s * 0.18, s * 0.07);
-  g.fill('#ffd23f');
-  g.rect(-s * 0.38, -s * 0.14, s * 0.76, s * 0.07, s * 0.03);
-  g.fill('#7ddf9a');
-  for (let i = -1.5; i <= 1.5; i++) {
-    g.circle(i * s * 0.22, -s * 0.08, s * 0.13);
-  }
-  g.fill('#f0c07e');
-  g.arc(0, -s * 0.1, s * 0.95, s * 0.7, PI, TWO_PI);
-  g.fill('#f5ead9');
-  g.circle(-s * 0.12, -s * 0.3, s * 0.06);
-  g.circle(s * 0.08, -s * 0.38, s * 0.06);
-  g.circle(s * 0.24, -s * 0.24, s * 0.06);
-}
-
-function glyphFries(g, s) {
-  g.noStroke();
-  g.fill('#ffd23f');
-  g.rect(-s * 0.26, -s * 0.62, s * 0.11, s * 0.5, s * 0.03);
-  g.rect(-s * 0.05, -s * 0.7, s * 0.11, s * 0.55, s * 0.03);
-  g.rect(s * 0.16, -s * 0.58, s * 0.11, s * 0.46, s * 0.03);
-  g.fill('#ff5d6c');
-  g.rect(-s * 0.34, -s * 0.28, s * 0.68, s * 0.62, s * 0.06);
-  g.fill('#f5ead9');
-  g.rect(-s * 0.34, -s * 0.1, s * 0.68, s * 0.08, s * 0.03);
-}
-
-function glyphBottle(g, s) {
-  g.noStroke();
-  g.fill('#f0a83c');
-  g.rect(-s * 0.16, -s * 1.15, s * 0.32, s * 0.16, s * 0.05);
-  g.rect(-s * 0.11, -s * 1.0, s * 0.22, s * 0.5, s * 0.04);
-  g.rect(-s * 0.3, -s * 0.52, s * 0.6, s * 1.4, s * 0.14);
-  g.fill('#ff5d6c');
-  g.rect(-s * 0.18, -s * 1.19, s * 0.36, s * 0.1, s * 0.04);
-  g.fill('#f5ead9');
-  g.rect(-s * 0.22, -s * 0.25, s * 0.44, s * 0.42, s * 0.05);
-}
-
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;',
@@ -1457,19 +1686,32 @@ function escapeHtml(s) {
 
 function windowResized() {
   const wrap = document.getElementById('canvas-wrap');
-  const w = fs ? windowWidth : Math.max(320, wrap.clientWidth);
-  const h = fs ? windowHeight : Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
+  const w = Math.max(320, wrap.clientWidth);
+  const h = Math.round(Math.min(w * 0.92, window.innerHeight * 0.76));
+  pixelDensity(Math.min(2, window.devicePixelRatio || 1));
   resizeCanvas(w, h);
-  layoutMap();
-  redrawLayer();
+  if (ready) layoutMap();
+  if (ready) redrawLayer();
   buildBgLayer();
-  buildHeaderSpots();
-  buildEdgeSpots();
-  if (scentOverlay) scentOverlay.resizeCanvas(window.innerWidth, window.innerHeight);
-  initProps();
   fadeStart = millis();
+  positionDetail();
   reportProjection();
 }
+
+function startMapFromIntro(filter) {
+  introActive = false;
+  loop();
+  applyLicenseFilter(filter || 'ALL', true);
+  playSfx('reveal');
+  const panel = document.querySelector('.panel');
+  if (panel) {
+    panel.classList.remove('panel-enter');
+    void panel.offsetWidth;
+    panel.classList.add('panel-enter');
+  }
+}
+
+window.startMapFromIntro = startMapFromIntro;
 
 function reportProjection() {
   if (!sourceNote || !ready || !points.length || !mapRect) return;
